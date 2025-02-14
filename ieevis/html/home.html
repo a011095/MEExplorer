@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotifVis 2024</title>
+    <!-- Semantic UI CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.1/dist/semantic.min.css">
+    <style>
+        #heat-vis{
+          width: 24vw;
+          height: 450px;
+          border: 1px solid blue;
+          margin-top: 10px;
+          position: relative;
+          float: left;
+          /* Center the element horizontally */
+          margin-left: 0px;
+          margin-right: auto;
+          /* Adjust transform for any specific adjustments if needed */
+        }
+
+        #scatter-vis {
+            width: 75vw;
+            height: 450px;
+            border: 1px solid blue;
+            margin-top: -480px;
+            position: relative;
+            float: right;
+            /* Center the element horizontally */
+            margin-left: auto;
+            margin-right: auto;
+
+            
+          }
+
+        #motif-container {
+            width: 98vw;
+            height: 700px;
+            border: 1px solid blue;
+            margin-top: -25px;
+            position: relative;
+            /* Center the element horizontally */
+            float: left;
+            margin-left: 15px;
+       
+            /* Adjust transform for any specific adjustments if needed */
+        }
+        #legend-wrapper {
+            position: relative;
+            width: 600px;
+            height: 20px; /* Adjust as needed */
+            border: 1px solid white;
+            position: left;
+            margin-left: 10px;
+            margin-right: auto;
+            margin-top: 400px;
+            transform: translateX(0px);
+        }
+        /* Custom Styles */
+        /* Add your custom styles here */
+    </style>
+</head>
+<body>
+    <div id="headline-container" class="ui inverted segment">
+        <h1 id="headline" class="ui header centered">MotifVis 2024</h1>
+    </div>
+    <div class="ui grid">
+    <div class="eight wide column">
+        <div id="heat-vis" class="ui container fluid raised segment">
+            <div class="ui center aligned segment">
+                <h5 class="ui header">Model Overview</h5>
+            </div>
+            <div id="dropdown-box" class="ui segment"></div>
+        </div>
+    </div>
+    <div class="sixteen wide column">
+        <div id="scatter-vis" class="ui container fluid raised segment" >
+            <div class="ui center aligned segment">
+                <h5 class="ui header">Scatter Overview</h5>
+            </div>
+            <button class="ui button" id="sim_button">Similarity</button>
+            <button class="ui button" id="consensus_button">Consensus</button>
+            <aside id="legend-wrapper" class="ui raised segment">
+                <section id="color-legend"></section>
+                <section id="legend-labels"></section>
+            </aside>
+        
+        </div>
+    </div>
+  
+    <div class="eight wide column"> <!-- Use "sixteen wide column" to span the entire width -->
+        <section id="motif-container" class="ui raised segment">
+            <div class="ui center aligned segment">
+                <h5 class="ui header">Motif Overview</h5>
+            </div>
+        </section>
+    </div>
+</div>
+
+
+    
+    <!-- Semantic UI JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.1/dist/semantic.min.js"></script>
+    <!-- Your custom scripts here -->
+    <script src="https://cdn.jsdelivr.net/npm/vega"></script>
+    <script type="module" src="utils.js"></script>
+    <script src="mathss.js"></script>
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    
+    <!-- Include Observable's standard library -->
+    <script src="https://unpkg.com/@observablehq/stdlib@3.24.0/dist/stdlib.js"></script>
+    
+    <!-- Include Vega-Lite -->
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite"></script>
+    
+    <!-- Include Vega-Lite API -->
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite-api"></script>
+    
+    <!-- Include Vega-Tooltip -->
+    <script src="https://cdn.jsdelivr.net/npm/vega-tooltip"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.0/math.min.js"></script>
+    <!-- script(src="mathss.js") -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/inputs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htl@0.3.1/dist/htl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/inputs@0.10.4/dist/inputs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-color-legend@1.4.1/+esm"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+</body>
+</html>

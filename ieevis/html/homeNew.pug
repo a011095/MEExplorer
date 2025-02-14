@@ -1,0 +1,97 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title MotifVis
+    // Semantic UI CSS
+    link(rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.1/dist/semantic.min.css")
+    style.
+      #heat-vis{
+        width: 24vw;
+        height: 450px;
+        border: 1px solid blue;
+        margin-top: 10px;
+        position: relative;
+        float: left;
+        margin-left: 0px;
+        margin-right: auto;
+      }
+
+      #scatter-vis {
+          width: 75vw;
+          height: 450px;
+          border: 1px solid blue;
+          margin-top: -480px;
+          position: relative;
+          float: right;
+          margin-left: auto;
+          margin-right: auto;
+      }
+
+      #motif-container {
+          width: 98vw;
+          height: 700px;
+          border: 1px solid blue;
+          margin-top: -25px;
+          position: relative;
+          float: left;
+          margin-left: 15px;
+      }
+      #legend-wrapper {
+          position: relative;
+          width: 600px;
+          height: 20px;
+          border: 1px solid white;
+          position: left;
+          margin-left: 10px;
+          margin-right: auto;
+          margin-top: 400px;
+          transform: translateX(0px);
+      }
+  body
+    #headline-container.ui.inverted.segment
+      h1#headline.ui.header.centered MotifVis
+    .ui.grid
+      .eight.wide.column
+        #heat-vis.ui.container.fluid.raised.segment
+          .ui.center.aligned.segment
+            h5.ui.header Model Overview
+          #dropdown-box.ui.segment
+      .sixteen.wide.column
+        #scatter-vis.ui.container.fluid.raised.segment
+          .ui.center.aligned.segment
+            h5.ui.header Scatter Overview
+          button.ui.button#sim_button Similarity
+          button.ui.button#consensus_button Consensus
+          #legend-wrapper.ui.raised.segment
+            section#color-legend
+            section#legend-labels
+      .eight.wide.column
+        #motif-container.ui.raised.segment
+          .ui.center.aligned.segment
+            h5.ui.header Motif Overview
+    // Semantic UI JavaScript
+    script(src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.1/dist/semantic.min.js")
+    // Your custom scripts here
+    script(src="https://cdn.jsdelivr.net/npm/vega")
+    script(type="module" src="utils.js")
+    script(src="mathss.js")
+    // Include D3.js
+    script(src="https://d3js.org/d3.v6.min.js")
+    // Include Observable's standard library
+    script(src="https://unpkg.com/@observablehq/stdlib@3.24.0/dist/stdlib.js")
+    // Include Vega-Lite
+    script(src="https://cdn.jsdelivr.net/npm/vega-lite")
+    // Include Vega-Lite API
+    script(src="https://cdn.jsdelivr.net/npm/vega-lite-api")
+    // Include Vega-Tooltip
+    script(src="https://cdn.jsdelivr.net/npm/vega-tooltip")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.0/math.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/d3@7")
+    script(src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6")
+    script(src="https://cdn.jsdelivr.net/npm/@observablehq/inputs")
+    script(src="https://cdn.jsdelivr.net/npm/htl@0.3.1/dist/htl.js")
+    script(src="https://cdn.jsdelivr.net/npm/@observablehq/inputs@0.10.4/dist/inputs.js")
+    script(src="https://cdn.jsdelivr.net/npm/d3-color-legend@1.4.1/+esm")
+    script(src="https://code.jquery.com/jquery-3.2.1.min.js")
