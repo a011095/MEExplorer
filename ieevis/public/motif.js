@@ -757,34 +757,28 @@ function consoleEvent(event){
       }
   
 
-  
+  //block for each model output
   function createHtmlViews(uniqueId,width_style) {
-    const viewer1 = document.createElement("div");
+    let viewer1 = document.createElement("div");
+
     viewer1.id = uniqueId; // Setting a unique ID to the div
     viewer1.classList.add("seq-viewer");
     viewer1.style.width = width_style;
-    viewer1.style.height = "90%";
-    viewer1.style.overflowX = "auto";
-    viewer1.style.border = "1px solid white";
-    viewer1.style.float = "right";
-   
-    // viewer1.style.transform ="translateX(18px)";
-    // viewer1.style.transform = "translateX(-18px) translateY(15px)"; // Combine transforms
-    viewer1.style.fontSize = "10px";
-    // Ensure the parent container of viewer1 is styled with `position: relative;`
-    viewer1.style.position = "absolute";
-    viewer1.style.bottom = "0"; // Move to the bottom
-    // viewer1.style.left = "0"; // Align to the left, can be adjusted or removed
-    viewer1.style.right = "0"; // Align to the right, ensures centering if left is also set to 0
-    // viewer1.style.marginLeft = "auto";
-    // viewer1.style.marginRight = "auto";
-  
-    // createAccordion(sequences, 0, "accordion1", " ")
+
+      // viewer1.style.height = "90%";
+      // viewer1.style.overflowX = "auto";
+      // viewer1.style.border = "1px solid white";
+      // viewer1.style.float = "right";
+      // viewer1.style.fontSize = "10px";
+      // viewer1.style.position = "absolute";
+      // viewer1.style.bottom = "0"; // Move to the bottom
+      // viewer1.style.right = "0"; // Align to the right, ensures centering if left is also set to 0
+
     return viewer1; // Return the created div element
   }
 
   
-  
+  //main entrance to visualize the model view
   export async function modelViewer(numOfContainers, color,motif) {
     // Select or create the motif-single container
 
@@ -797,9 +791,10 @@ function consoleEvent(event){
     let align_sequences;
     let idsL;
     let labels;
+
+    //for the sequence view
     d3.csv("cas9_align_umap_with_gpt2_bert_t5.csv").then(function(data) {
       const view_table_accordion_main = createHtmlViews("accordion_main","98%")
-      // const view_side_tabel = createHtmlViews2("side_table","38%")
       acc.append(view_table_accordion_main)
       // acc.append(view_side_tabel)
       const align0_new = Array.from(new Set(data.map(d => d.aligned)));
@@ -817,7 +812,7 @@ function consoleEvent(event){
     // Create the specified number of motifs-viewer containers
     for (let i = 0; i < numOfContainers; i++) {
       const viewer = document.createElement("div");
-      viewer.classList.add("seq-viewer");
+      viewer.classList.add("motif-viewer");
       viewer.style.width = "98%";
       viewer.style.height = "20%";
       // viewer.style.overflowX = "auto";
@@ -835,6 +830,7 @@ function consoleEvent(event){
       textContainer.style.height = "25px";
       textContainer.style.width = "100px";
       textContainer.style.marginTop = "0px";
+      textContainer.style.marginBottom = "0px"
 
 
       textContainer.style.color = color; // Assuming 'color' is defined earlier
@@ -853,18 +849,15 @@ function consoleEvent(event){
       let N=10;
       const [pop0,all_prob0] = await return_popular_motifs0(motif[i],N);
       const [pop1,all_prob1]= await return_popular_motifs1(motif[i],N);
-      // const align0 = await return_align_sequences0();
-      // const align1 = await return_align_sequences1();
+
       let keys1 = Object.keys(pop0); // Get all keys
       let keys2 = Object.keys(pop1);
-      let first10Keys1 = keys1.slice(0, 50); 
-      let first10Keys2 = keys2.slice(0, 50); 
 
   
       const viewer1 = document.createElement("div");
       viewer1.id = "viewer1"+motif[i]; // Setting a unique ID to the div
   
-      viewer1.classList.add("seq-viewer");
+      viewer1.classList.add("motif-viewer1");
       viewer1.style.width = "100%";
       viewer1.style.height = "130px";
       // viewer1.style.overflowX = "auto";
@@ -885,26 +878,26 @@ function consoleEvent(event){
   
       
   
-      const viewer2 = document.createElement("div");
-      viewer2.classList.add("seq-viewer");
-      viewer2.style.width = "100%";
-      viewer2.style.height = "60px";
-      // viewer2.style.overflowX = "auto";
-      viewer2.style.border = "1px solid white";
-      viewer2.style.float = "left";
-      viewer2.style.marginTop = "2px";
-      viewer2.style.position = "relative";
-      viewer2.style.transform = "translateX(8px)";
-      viewer2.style.left = "10px";
-      
-      // viewer2.append(view_table2)
-      viewer2.addEventListener('click', function() {
-         if (viewer2.innerText === "Label 1"){
-  
-          // createAccordion(align1, 1, "accordion2", " ");
-          alert('Label 1');
-        }
-      });
+      // const viewer2 = document.createElement("div");
+      // viewer2.classList.add("motif-viewer2");
+      // viewer2.style.width = "100%";
+      // viewer2.style.height = "60px";
+      // // viewer2.style.overflowX = "auto";
+      // viewer2.style.border = "1px solid white";
+      // viewer2.style.float = "left";
+      // viewer2.style.marginTop = "2px";
+      // viewer2.style.position = "relative";
+      // viewer2.style.transform = "translateX(8px)";
+      // viewer2.style.left = "10px";
+      //
+      // // viewer2.append(view_table2)
+      // viewer2.addEventListener('click', function() {
+      //    if (viewer2.innerText === "Label 1"){
+      //
+      //     // createAccordion(align1, 1, "accordion2", " ");
+      //     alert('Label 1');
+      //   }
+      // });
 
       // Convert the dictionary into a sorted array of index ranges
       const indexRanges = Object.entries(pop0).map(([key, value]) => {
@@ -927,24 +920,6 @@ function consoleEvent(event){
         return newItem;
       });
 
-      
-  
-      const maxEndValue = indexRanges.reduce((max, {end}) => Math.max(max, end), 0);
-      const keys_hard = Object.keys(pop0);
-  
-  
-      const totalRange = 2900 + 50;
-  
-      const viewerWidth = String(500)
-      const chartReferences =["#line1BiLSTM_T5", "#line2BiLSTM_T5"]
-      
-      // const [marginLeft1,marginRight1,width1,height1,svg1,x1,rects1] =createChart(viewer1, indexRangesProb ,color_hues_for_blues,"Label0","line1"+motif[i],
-      // align_sequences,"accordion_main",idsL,labels);
-      
-  
-      
-
-      // addMarkers(viewerWidth, totalRange, line);
   
       // Convert the dictionary into a sorted array of index ranges
       const indexRanges1 = Object.entries(pop1).map(([key, value]) => {
@@ -967,15 +942,6 @@ function consoleEvent(event){
         newItem.prob = all_prob1[item.keys];
         return newItem;
     });
-  
-  
-      const maxEndValue1 = indexRanges1.reduce((max, {end}) => Math.max(max, end), 0);
-      const keys_hard1 = Object.keys(pop1);
-  
-      const totalRange1 = 2900 + 50;
-  
-      const viewerWidth1 = String(500)
-
       createDualChart(viewer1, indexRangesProb, color_hues_for_blues, "Pathogenic", indexRangesProb1, 
       color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
       motifSingle.appendChild(viewer);
