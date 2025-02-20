@@ -100,35 +100,7 @@ $( document ).ready(function(){
           });
 
       }})
-});
-  
-
-  
 
   const models =["BiLSTM_T5","BiLSTM_GPT2","CNN_T5","CNN_gpt2","CNN_Bert","Trans_T5","Trans_Gpt2","Trans_Bert","BiLSTM_Bert"];
   modelViewer(models.length, "gray",models);
-
- 
-  function setupWheelZoom(lineName) {
-    const lineContainer = d3.select('#' + lineName);
-
-    // Define the zoom behavior with scale extent
-    const zoom = d3.zoom()
-        .scaleExtent([1, 32])
-        .filter(event => event.type === 'wheel')
-        .on("zoom", zoomed);
-
-    // Initialize the zoom behavior on the container with a transition to the initial zoom level
-    lineContainer.call(zoom)
-        // .transition()
-        // .duration(750)
-        // .call(zoom.transform, d3.zoomIdentity.scale(4));  // Starting with a scale factor of 4
-
-        function zoomed(event) {
-          // Apply transformation to all child elements
-          const children = lineContainer.selectAll('div, span');
-          children
-              .style("transition", "transform 0.75s ease") // Smooth transitions for transform
-              .style("transform", d => `translate(${event.transform.x}px, ${event.transform.y}px) scale(${event.transform.k})`);
-      }
-}
+});

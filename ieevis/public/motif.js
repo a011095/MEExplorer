@@ -5,10 +5,10 @@ import { color_hues_green_ } from './scatter_d3.js';
 
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId, align_sequences, accordion_table, ids_list, labels_list,model) {
   const width = 1000;
-  const height = 120;
-  const chartHeight = height / 2;
+  const height = 100;
+  const chartHeight = height / 2 - 20;
   // const gap = 10; 
-  const margins = { top: 40, right: 10, bottom: 0, left: 90 };
+  const margins = { top: 40, right: 10, bottom: 0, left: 2 };
   const barHeight = 20;
 
   const svg = d3.select(container).append("svg")
@@ -18,6 +18,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       .attr("id", chartId)
       .style("max-width", "100%")
       .style("height", "auto");
+
+
   const xScale = d3.scaleLinear()
       .domain([0, 3065])
       .range([margins.left, width - margins.right - 20]);
@@ -25,21 +27,23 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
 
   const chartGroups = [
       svg.append("g").attr("transform", `translate(0, 0)`).attr("id", "line1"+model),
-      svg.append("g").attr("transform", `translate(0, ${chartHeight-20})`).attr("id", "line2"+model)
+      svg.append("g").attr("transform", `translate(0, ${height / 2})`).attr("id", "line2"+model)
   ];
   chartGroups.forEach((group, i) => {
     group.append("g")
         .attr("class", "x-axis")
         .attr("transform", `translate(0,${chartHeight - margins.bottom})`)
-        .call(d3.axisBottom(xScale).tickValues([0, 3065]).tickSizeOuter(0));
+        .call(d3.axisBottom(xScale).tickValues(d3.range(xScale.domain()[0],xScale.domain()[1]+1,(xScale.domain()[1]-xScale.domain()[0])/10)).tickSizeOuter(0));
+
+
     // Adding label for each chart
     const label = (i === 0) ? label1 : label2;  // Choose the label based on the index
-    group.append("text")
-        .attr("x", 42) // Position label at the center of the width
-        .attr("y", (height / 2)-10) // Position at half the top margin
-        .attr("text-anchor", "middle") // Center the text horizontally
-        .style("font-size", "12px") // Set the font size
-        .text(label); // Text content
+    // group.append("text")
+    //     .attr("x", 42) // Position label at the center of the width
+    //     .attr("y", (height / 2)-10) // Position at half the top margin
+    //     .attr("text-anchor", "middle") // Center the text horizontally
+    //     .style("font-size", "13px") // Set the font size
+    //     .text(label); // Text content
 });
 
   // Ensure data objects have 'start' and 'end' attributes
@@ -72,22 +76,24 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
   });
 
   // Apply zoom to the entire SVG
-  // const tickValues = [0, 500, 1000, 1500, 2000, 2500, 3065];
-
   const zoom = d3.zoom()
         .scaleExtent([1, 32])
-        .translateExtent([[margins.left, 0], [width - margins.right, height]])
-        .extent([[margins.left, 0], [width - margins.right, height]])
+        .translateExtent([[margins.left,0],[width - margins.right - 20,height]])
+        .extent([[margins.left,0],[width - margins.right - 20,height]])
         .on("zoom", (event) => {
             const xz = event.transform.rescaleX(xScale);
             svg.selectAll("rect")
                 .attr("x", d => xz(d.start))
-                .attr("width", d => xz(d.end) - xz(d.start));
+                .attr("width",function(d){
+                    if(xz(d.start)>margins.left)
+                        return xz(d.end) - xz(d.start);
+                    else
+                        return 0;
+                });
+
             chartGroups.forEach(group => {
                 group.select("g")
-                  .call(d3.axisBottom(xz).tickValues(xz.domain().map(Math.round)).tickSizeOuter(0));
-
-                  // .call(d3.axisBottom(xScale).tickValues([0, 3065]).tickSizeOuter(0));
+                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
               });
         });
 
@@ -484,8 +490,6 @@ function consoleEvent(event){
     
     // Return the result
     return [sequences,probability]
-    // return[positionData,probabilityData];
-    // return [avgPositions,probSums];
   }
 
   
@@ -813,33 +817,11 @@ function consoleEvent(event){
     for (let i = 0; i < numOfContainers; i++) {
       const viewer = document.createElement("div");
       viewer.classList.add("motif-viewer");
-      viewer.style.width = "98%";
-      viewer.style.height = "20%";
-      // viewer.style.overflowX = "auto";
-      viewer.style.border = "1px solid white";
-      viewer.style.float = "right";
-      viewer.style.marginTop = "10px";
-      viewer.style.position = "relative";
-      viewer.style.transform = "translateX(-8px)";
   
       // Create a new div element to serve as the text container
       let textContainer = document.createElement("div");
-      // textContainer.style.display = "flex";
-      // textContainer.style.justifyContent = "center";
-      textContainer.style.alignItems = "center";
-      textContainer.style.height = "25px";
-      textContainer.style.width = "100px";
-      textContainer.style.marginTop = "0px";
-      textContainer.style.marginBottom = "0px"
-
-
-      textContainer.style.color = color; // Assuming 'color' is defined earlier
+      textContainer.classList.add("motif-view-label");
       textContainer.innerText = motif[i]; // Assuming 'motif' is an array and 'i' is the index
-      textContainer.style.border = "1px solid white";
-    
-
-      // To move the container to the left by 200px
-      textContainer.style.marginLeft = "0px"; // Moves the container left by 200px
 
       // Append the container to the document body or another specific element
       document.body.appendChild(textContainer);
@@ -853,21 +835,11 @@ function consoleEvent(event){
       let keys1 = Object.keys(pop0); // Get all keys
       let keys2 = Object.keys(pop1);
 
-  
+
       const viewer1 = document.createElement("div");
       viewer1.id = "viewer1"+motif[i]; // Setting a unique ID to the div
   
       viewer1.classList.add("motif-viewer1");
-      viewer1.style.width = "100%";
-      viewer1.style.height = "130px";
-      // viewer1.style.overflowX = "auto";
-      viewer1.style.border = "1px solid white";
-      viewer1.style.float = "left";
-      // viewer1.style.marginTop = "2px";
-      viewer1.style.position = "relative";
-      viewer1.style.transform = "translateX(8px)";
-      viewer1.style.left = "10px";
-     
       viewer1.addEventListener('click', function() {
          if (viewer1.innerText === "Label 0"){
           // createAccordion(align0, 0, "accordion1", " ");
@@ -875,29 +847,7 @@ function consoleEvent(event){
         }
       });
       viewer.append(viewer1);
-  
-      
-  
-      // const viewer2 = document.createElement("div");
-      // viewer2.classList.add("motif-viewer2");
-      // viewer2.style.width = "100%";
-      // viewer2.style.height = "60px";
-      // // viewer2.style.overflowX = "auto";
-      // viewer2.style.border = "1px solid white";
-      // viewer2.style.float = "left";
-      // viewer2.style.marginTop = "2px";
-      // viewer2.style.position = "relative";
-      // viewer2.style.transform = "translateX(8px)";
-      // viewer2.style.left = "10px";
-      //
-      // // viewer2.append(view_table2)
-      // viewer2.addEventListener('click', function() {
-      //    if (viewer2.innerText === "Label 1"){
-      //
-      //     // createAccordion(align1, 1, "accordion2", " ");
-      //     alert('Label 1');
-      //   }
-      // });
+
 
       // Convert the dictionary into a sorted array of index ranges
       const indexRanges = Object.entries(pop0).map(([key, value]) => {
