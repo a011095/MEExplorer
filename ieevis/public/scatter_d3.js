@@ -709,29 +709,7 @@ export function scatter(files_name,model){
                   }
               }
           }
-      });
-
-      // svg.on("click",function(d){
-      //     console.log(d)
-      //     //     dots.style('fill-opacity', 1.0)
-      //     //     dots.style('stroke-opacity', 1.0)
-      //     //
-      //     //     for (let cls of classes) {
-      //     //         try {
-      //     //             replaceModelReferences(d, cls);
-      //     //         } catch (error) {
-      //     //             console.error(`Error processing model ${cls}:`, error);
-      //     //         }
-      //     //     }
-      //     //     for (let cls of classes) {
-      //     //         try {
-      //     //             replaceModelReferences2(d, cls);
-      //     //         } catch (error) {
-      //     //             console.error(`Error processing model ${cls}:`, error);
-      //     //         }
-      //     //     }
-      //     // }
-      // })
+      })
 
   //depict the length of protein sequences.
   let lines = svg.append('g')
@@ -807,15 +785,12 @@ export function scatter(files_name,model){
               // }
           });
   }
-
-
-
   })
 }
 
 function initializeSlider2(callback) {
   const min = 0;
-  const max = 150;
+  const max = 437;
 
   $('#threshold-slider2').slider({
     min: min,

@@ -3,13 +3,21 @@ import { addLegendLabels } from './scatter_d3.js';
 import { color_hues_for_blues } from './scatter_d3.js';
 import { color_hues_green_ } from './scatter_d3.js';
 
+let seqLen = 3065
+
+
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId, align_sequences, accordion_table, ids_list, labels_list,model) {
-  const width = 1000;
+
+
+    const width = 1000;
   const height = 100;
   const chartHeight = height / 2 - 20;
   // const gap = 10; 
   const margins = { top: 40, right: 10, bottom: 0, left: 2 };
   const barHeight = 20;
+
+
+
 
   const svg = d3.select(container).append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`)
@@ -18,6 +26,9 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       .attr("id", chartId)
       .style("max-width", "100%")
       .style("height", "auto");
+
+    // svg
+
 
 
   const xScale = d3.scaleLinear()
@@ -33,7 +44,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     group.append("g")
         .attr("class", "x-axis")
         .attr("transform", `translate(0,${chartHeight - margins.bottom})`)
-        .call(d3.axisBottom(xScale).tickValues(d3.range(xScale.domain()[0],xScale.domain()[1]+1,(xScale.domain()[1]-xScale.domain()[0])/10)).tickSizeOuter(0));
+        .call(d3.axisBottom(xScale).tickValues(d3.range(xScale.domain()[0],xScale.domain()[1]+1,(xScale.domain()[1]-xScale.domain()[0])/10)).tickSizeOuter(0))
 
 
     // Adding label for each chart
@@ -46,34 +57,69 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     //     .text(label); // Text content
 });
 
+  //console.log(data1)
+    // .attr("x", function(d,i){
+    //     //console.log(xScale(i))
+    //     return xScale(i);
+    // })
   // Ensure data objects have 'start' and 'end' attributes
-  data1.forEach(data => {
-      chartGroups[0].append("rect")
-          .datum(data)  // Bind the full data object here
-          .attr("x", d => xScale(d.start))
-          .attr("width", d => xScale(d.end) - xScale(d.start))
-          .attr("y", chartHeight - margins.bottom - barHeight)
-          .attr("height", barHeight)
-          .attr("fill", color1[Math.round(data.prob * (color1.length - 1))])
-          .on("click", function(event, d) {
-            createAccordion(align_sequences, 0, accordion_table,
-              [d.start,d.end], " ", " ", ids_list, labels_list, 437)
-          });
-  });
+   // console.log(data1)
 
-  data2.forEach(data => {
-      chartGroups[1].append("rect")
-          .datum(data)  // Bind the full data object here
-          .attr("x", d => xScale(d.start))
-          .attr("width", d => xScale(d.end) - xScale(d.start))
-          .attr("y", chartHeight - margins.bottom - barHeight)
-          .attr("height", barHeight)
-          .attr("fill", color2[Math.round(data.prob * (color2.length - 1))])
-          .on("click", function(event, d) {
-            createAccordion(align_sequences, 0, accordion_table,
-              [d.start,d.end], " ", " ", ids_list, labels_list, 437)
-                    });
-  });
+    // const brush = d3.brush()
+    //     .on("end", brushed);
+
+
+    let maxprob = data1.reduce((max, obj) => obj.prob > max ? obj.prob : max, data1[0].prob);
+    let minprob = data1.reduce((min, obj) => obj.prob < min ? obj.prob : min, data1[0].prob);
+
+    chartGroups[0]
+        .selectAll("rect")
+        .data(data1)
+        .join("rect")
+        .attr("y", chartHeight - margins.bottom - barHeight)
+        .attr("x", (d,i) => xScale(i))
+        .attr("width", function(d){
+          if(d.count > 0) {
+              return xScale(1);
+          }
+          else
+              return 0;
+        })
+        .attr("height", barHeight)
+        .attr("fill", d => color1[Math.round((d.prob-minprob)/maxprob * (color1.length - 1))])
+    //.call(brush);
+        // .on("click", function(event, d) {
+        //     createAccordion(align_sequences, 0, accordion_table,
+        //         d, " ", " ", ids_list, labels_list, 437)
+        // });
+    maxprob = data2.reduce((max, obj) => obj.prob > max ? obj.prob : max, data2[0].prob);
+    minprob = data2.reduce((min, obj) => obj.prob < min ? obj.prob : min, data2[0].prob);
+
+    chartGroups[1]
+        .selectAll("rect")
+        .data(data2)
+        .join("rect")
+        .attr("x", d => xScale(d.ind))
+        .attr("width", function(d){
+            if(d.count > 0) {
+                return Math.abs(xScale(1) - xScale(0));
+            }
+            else
+                return 0;
+        })
+        .attr("y", chartHeight - margins.bottom - barHeight)
+        .attr("height", barHeight)
+        .attr("fill", d=>color2[Math.round((d.prob-minprob)/maxprob  * (color2.length - 1))])
+        //.call(brush);
+        // .on("click", function(event, d) {
+        //     createAccordion(align_sequences, 0, accordion_table,
+        //         d, " ", " ", ids_list, labels_list, 437)
+        // });
+
+
+
+
+    //https://codesandbox.io/p/sandbox/zoom-and-brush-forked-pr1g3c?file=%2Fsrc%2Findex.js%3A20%2C1
 
   // Apply zoom to the entire SVG
   const zoom = d3.zoom()
@@ -83,10 +129,15 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         .on("zoom", (event) => {
             const xz = event.transform.rescaleX(xScale);
             svg.selectAll("rect")
-                .attr("x", d => xz(d.start))
+                .attr("x", d => xz(d.ind))
                 .attr("width",function(d){
-                    if(xz(d.start)>margins.left)
-                        return xz(d.end) - xz(d.start);
+                    if(xz(d.ind)>margins.left)
+                        if(d.count > 0) {
+                            return Math.abs(xz(1) - xz(0));
+                        }
+                        else
+                            return 0;
+                        //return xz(d.end) - xz(d.start);
                     else
                         return 0;
                 });
@@ -97,669 +148,138 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
               });
         });
 
+    // Brushing
+    const brush = d3.brush().on('brush end', () => {
+        if (event.sourceEvent.type === 'zoom') {
+            return;
+        }
+        if (event.selection === null) {
+            selectionExtent = origExtent;
+            return renderBars();
+        }
+        // get x coordinates
+        const [x0, x1] = event.selection;
+        // convert to dates
+        const startDate = _xScale.invert(x0);
+        const endDate = _xScale.invert(x1);
+        selectionExtent = [startDate, endDate];
+        renderBars();
+    });
+
+    svg.append("g").call(brush);
+
 
   svg.call(zoom)
     .transition()
     .duration(500)
     .call(zoom.scaleTo, 1);
+
+    // Create the brush behavior.
+
 }
 
 
 
-function consoleEvent(event){
-  console.log(event)
-}
 
-
-
-
-
-
-
-  function createAssoSeqViewers(numOfContainers,motif,color,subs) {
-    // Select or create the motif-single container
-    let motifSingle = document.getElementById("associated-sequence");
-
-    // Clear existing viewers if any
-    motifSingle.innerHTML = '';
-    const highlightColor = "yellow"; // Choose any color to highlight
-
-
-
-    // Create the specified number of motifs-viewer containers
-    for (let i = 0; i < numOfContainers; i++) {
-      const viewer = document.createElement("div");
-      viewer.classList.add("seq-viewer"); // Use class for multiple elements instead of unique ID
-      viewer.style.width = "570px";
-      viewer.style.height = "80px";
-      viewer.style.overflowX = "auto";
-
-      viewer.style.border = "1px solid blue";
-      viewer.style.float = "right";
-      viewer.style.marginTop = "10px";
-      viewer.style.position = "relative";
-      viewer.style.transform = "translateX(-2px)";
-      /* Enable horizontal scrolling */
-      // viewer.style.overflowWrap= "break-word";
-      viewer.style.color = color;
-      viewer.innerText = motif[i]; // Optional: Just to identify the viewer
-
-       // Check if the motif contains the subsequence
-      if (motif[i].includes(subs)) {
-        // Split the motif into parts around the subs for highlighting
-        const parts = motif[i].split(subs);
-        // Reconstruct the motif with the subs highlighted
-        let highlightedHTML = '';
-        parts.forEach((part, index) => {
-          highlightedHTML += part;
-          if (index < parts.length - 1) { // Don't add subs after the last part
-            highlightedHTML += `<span style="background-color: ${highlightColor};">${subs}</span>`;
-          }
-        });
-        viewer.innerHTML = highlightedHTML;
-      } else {
-        viewer.innerText = motif[i];
-      }
-
-
-      motifSingle.appendChild(viewer);
-    }
-  }
-  
-  function associatedSeq(selectedlabel,motif,color){
-  
-     if (selectedlabel==0){
-      d3.csv("https://raw.githubusercontent.com/vikash06131721/Data-host/main/motif_dictgroup0.csv").then(function(data){
-        console.log(data);
-        const filteredSeq = data.filter(item => item.motifs.includes(motif)).map(item => item.sequences);
-        console.log(filteredSeq);
-        const containers = filteredSeq[0].split(";").length;
-        const all_seqs = filteredSeq[0].split(";");
-        createAssoSeqViewers(containers,all_seqs,color,motif);
-  
-      });
-    }
-    else if(selectedlabel==1){
-      d3.csv("https://raw.githubusercontent.com/vikash06131721/Data-host/main/motif_dictgroup1.csv").then(function(data){
-        console.log(data);
-        const filteredSeq = data.filter(item => item.motifs.includes(motif)).map(item => item.sequences);
-        console.log(filteredSeq);
-        const containers = filteredSeq[0].split(";").length;
-        const all_seqs = filteredSeq[0].split(";");
-        createAssoSeqViewers(containers,all_seqs,color,motif);
-  
-      });
-  
-    }
-  
-  }
-
-  
   async function return_popular_motifs0(modelType,N) {
     // Load and process the CSV file
     const motif_data = await d3.json("https://raw.githubusercontent.com/vikash06131721/Data-host/main/group0.json");
     let all_data;
     if(modelType=="BiLSTM_T5"){
         all_data = await d3.csv("cas9_bisltm_t5.csv");
-
-        // all_data = await d3.csv("cas9_bisltm_t5_new.csv");
       }
     else if(modelType=="CNN_T5"){
-        // all_data = await  d3.csv("cas9_cnn_t5.csv");
         all_data = await  d3.csv("cas9_cnn_t5.csv");
-
-    
       }
     else if(modelType=="BiLSTM_GPT2"){
-        // all_data = await d3.csv("cas9_bilstm_gpt2.csv");
         all_data = await d3.csv("cas9_bilstm_gpt2.csv");
-
-  
       }
     else if(modelType=="BiLSTM_Bert"){
-        // all_data = await d3.csv("cas9_bert_lstm.csv");
         all_data = await d3.csv("cas9_bert_lstm.csv");
-
-  
       }
     else if(modelType=="CNN_gpt2"){
-        // "https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all_gpt2_cnn_files.csv"
-        // all_data = await d3.csv("cas9_cnn_gpt2.csv");
         all_data = await d3.csv("cas9_cnn_gpt2.csv");
-
-  
       }
     else if(modelType=="CNN_Bert"){
-        // all_data = await d3.csv("cas9_bert_cnn.csv");
         all_data = await d3.csv("cas9_bert_cnn.csv");
-
-  
       }
     else if(modelType=="Trans_Gpt2"){
-        // all_data = await d3.csv("cas9_gpt2_only.csv");
         all_data = await d3.csv("cas9_gpt2_only.csv");
-
-  
       }
     else if(modelType=="Trans_T5"){
-        // all_data = await d3.csv("cas9_t5_only.csv");
         all_data = await d3.csv("cas9_t5_only.csv");
-
-  
       }
     else if(modelType=="Trans_Bert"){
-        // all_data = await d3.csv("cas9_bert_only.csv");
         all_data = await d3.csv("cas9_bert_only.csv");
-
       }
     
-    let strings=[];
-    let probs=[]
-    let all_pos=[]
+    let strings_l0=[]; //motif seq
+    let probs_l0=[] //motif prob
+    let all_pos_l0=[] //motif locations
+      let strings_l1=[]; //motif seq
+      let probs_l1=[] //motif prob
+      let all_pos_l1=[] //motif locations
+
     all_data.forEach(d => {
-      if(d.label==0){
         const mot = d.align_motifs;
         const pos = d.align_start_stop
         let pos1 = pos.replace(/'/g, '"')
         let pos2 = pos1.replace('None','[0,0]')
-        strings.push(JSON.parse(mot.replace(/'/g, '"')))
-        probs.push(JSON.parse(d.prob))
-        all_pos.push(JSON.parse(pos2))
-      }
+
+        if(d.label==0){
+            strings_l0.push(JSON.parse(mot.replace(/'/g, '"')))
+            probs_l0.push(JSON.parse(d.prob))
+            all_pos_l0.push(JSON.parse(pos2))
+        }
+        else if(d.label == 1){
+            strings_l1.push(JSON.parse(mot.replace(/'/g, '"')))
+            probs_l1.push(JSON.parse(d.prob))
+            all_pos_l1.push(JSON.parse(pos2))
+        }
     });
 
-    let sequenceData = {};
+    let sequenceL0 = [],sequenceL1 = [];//new Array(seqLen);
+    for (let i = 0; i < seqLen; i++){
+        let info0 = {count:0, prob:0,ind:i};
+        sequenceL0.push(info0);
+        let info1 = {count:0, prob:0,ind: i};
+        sequenceL1.push(info1);
+    }
 
-    strings.forEach((seqList, index) => {
-        seqList.forEach((seq, seqIndex) => {
-            const [startPos, endPos] = all_pos[index][seqIndex];
-            const positionSpread = endPos - startPos;
-            const allowedSpread = Math.ceil(seq.length * 1.5); // 50% more than the length of the sequence
+      strings_l0.forEach((seqList, index) => { //for each protein sequence
+        seqList.forEach((seq, seqIndex) => { //for each motif candidate
+            let [startPos, endPos] = all_pos_l0[index][seqIndex];
 
-            if (positionSpread <= allowedSpread) {
-                if (!sequenceData[seq]) {
-                    sequenceData[seq] = {
-                        positions: {},
-                        totalProb: 0,
-                        count: 0
-                    };
+            endPos = (endPos > seqLen)?seqLen:endPos;
+
+            for (let j = startPos; j < endPos; j++) {
+                try{
+                    sequenceL0[j].count += 1;
+                    sequenceL0[j].prob += probs_l0[index][seqIndex];
                 }
-                // Record each start and end position pair along with their occurrences
-                const posKey = `${startPos}-${endPos}`;
-                if (!sequenceData[seq].positions[posKey]) {
-                    sequenceData[seq].positions[posKey] = 0;
+                catch(error){
+                    console.error(j)
                 }
-                sequenceData[seq].positions[posKey] += 1;
 
-                sequenceData[seq].totalProb += probs[index][seqIndex];
-                sequenceData[seq].count += 1;
             }
         });
     });
 
-    // After collecting data, determine the most frequent range for each sequence
-    Object.keys(sequenceData).forEach(seq => {
-        const posEntries = Object.entries(sequenceData[seq].positions);
-        const mostCommonPos = posEntries.reduce((max, entry) => {
-            return (entry[1] > max[1]) ? entry : max;
-        }, ['', 0]); // Initialize with empty string and zero count
+      strings_l1.forEach((seqList, index) => { //for each protein sequence
+          seqList.forEach((seq, seqIndex) => { //for each motif candidate
+              let [startPos, endPos] = all_pos_l1[index][seqIndex];
 
-        // Update sequenceData with the most common start and end positions
-        const [mostCommonStart, mostCommonEnd] = mostCommonPos[0].split('-').map(Number);
-        sequenceData[seq].mostCommonStart = mostCommonStart;
-        sequenceData[seq].mostCommonEnd = mostCommonEnd;
+              endPos = (endPos > seqLen)?seqLen:endPos;
 
-        // Optional: clean up by removing the 'positions' object if not needed further
-        delete sequenceData[seq].positions;
-    });
-
-// console.log(sequenceData);
-
-
-    const entriesArray = Object.entries(sequenceData).map(([seq, data]) => {
-      return {
-          sequence: seq, // Adding the sequence string to the object
-          ...data // Spread the existing data properties
-      };
-    });
-    
-    // Sort the array based on the 'count' property in descending order
-    entriesArray.sort((a, b) => b.count - a.count);
-    
-    // Get the top 40 entries
-    const topFortyEntries = entriesArray;
-
-    const nonOverlappingEntries = [];
-    const addEntryIfNonOverlapping = (entry) => {
-        for (let existingEntry of nonOverlappingEntries) {
-            // Check for overlap
-            if (!(entry.mostCommonEnd < existingEntry.mostCommonStart || entry.mostCommonStart > existingEntry.mostCommonEnd)) {
-                return false; // There is an overlap, do not add this entry
-            }
-        }
-        return true; // No overlaps found, this entry can be added
-    };
-
-    for (let entry of topFortyEntries) {
-        if (nonOverlappingEntries.length >= 200) {
-            break; // Stop if we already have 10 non-overlapping entries
-        }
-        if (addEntryIfNonOverlapping(entry)) {
-            nonOverlappingEntries.push(entry); // Add to the list if non-overlapping
-        }
-    }
-
-    // console.log(nonOverlappingEntries); // This will show the top 10 non-overlapping entries based on count
-
-    const sequences = {};
-    const probability = {};
-
-    nonOverlappingEntries.forEach(entry => {
-        sequences[entry.sequence] = [entry.mostCommonStart,entry.mostCommonEnd, entry.count ];
-        probability[entry.sequence] = entry.totalProb / entry.count;
-    });
-
-    // Remove overlapping sequences
-    let nonOverlappingSequences = Object.entries(sequenceData).sort((a, b) => a[1].startPos - b[1].startPos);
-    nonOverlappingSequences = nonOverlappingSequences.reduce((acc, current) => {
-        if (!acc.some(item => item[1].endPos >= current[1].startPos)) {
-            acc.push(current);
-        }
-        return acc;
-    }, []);
-
-    // Sort by count in descending order and selecting top sequences
-    const topSequences = nonOverlappingSequences
-        .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 20); // Change to 40 or any other number as required
-
-    // Prepare separate dictionaries for positions and probabilities
-    const positionData = {};
-    const probabilityData = {};
-
-    topSequences.forEach(([seq, data]) => {
-        positionData[seq] = [data.startPos, data.endPos];
-        probabilityData[seq] = parseFloat(data.totalProb.toFixed(6));
-    });
-
-    // console.log("Position Data:", positionData);
-    // console.log("Probability Data:", probabilityData);
-
-      
-
-
-    // Flatten the structures and prepare for counting, summing probabilities, and positions
-    let combined = [];
-    let posIndex = 0; // To keep track of corresponding positions
-    strings.forEach((sublist, index) => {
-      sublist.forEach((item, subIndex) => {
-        combined.push({ item: item, prob: probs[index][subIndex], pos: all_pos[index][subIndex] });
+              for (let j = startPos; j < endPos; j++) {
+                  sequenceL1[j].count += 1;
+                  sequenceL1[j].prob += probs_l1[index][seqIndex];
+              }
+          });
       });
-    });
-
-    // Count frequencies, sum probabilities, and sum positions
-    let counts = {};
-    let probSums = {};
-    let posSums={};
-    combined.forEach(({ item, prob, pos }) => {
-      counts[item] = (counts[item] || 0) + 1;
-      probSums[item] = (probSums[item] || 0) + prob;
-
-      // console.log("POS values",pos);
-      // console.log("POS values item",posSums[item]);
-      
-    });
-
-    // let posSums = {};
-
-    // Sum positions for each item
-    combined.sort((a, b) => a.pos[1] - b.pos[1]);
-    // Filter out overlapping intervals
-    let lastEnd = -Infinity;
-    const new_combined = combined.filter(interval => {
-        if (interval.pos[0] >= lastEnd) {
-            lastEnd = interval.pos[1];
-            return true;
-        }
-        return false;
-    });
-
-    try {
-      new_combined.forEach(entry => {
-            if (!posSums[entry.item]) {
-                posSums[entry.item] = [0, 0];
-            }
-            posSums[entry.item][0] += entry.pos[0];
-            posSums[entry.item][1] += entry.pos[1];
-        });
-    } catch (error) {
-        console.error("Error summing positions:", error);
-    }
-
-    // Compute average positions and round to nearest integer
-    let avgPositions = {};
-
-    try {
-        Object.keys(posSums).forEach(item => {
-            let avgPos = [
-                Math.round(posSums[item][0] / counts[item]), 
-                Math.round(posSums[item][1] / counts[item])
-            ];
-            avgPositions[item] = avgPos;
-        });
-    } catch (error) {
-        console.error("Error computing average positions:", error);
-    }
-
-
-
-    // Calculate average positions and round them
-    
-
-    // Sort by frequency in decreasing order and then slice the top 5
-    let sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-
-    // Extract top 5 items for probability sums and average positions to match the sorted and sliced counts
-    let sortedProbSums = {};
-    let sortedAvgPositions = {};
-    sortedCounts.forEach(([item, _]) => {
-      sortedProbSums[item] = probSums[item];
-      sortedAvgPositions[item] = avgPositions[item];
-    });
-
-    // Convert to the desired object format
-    let resultCounts = Object.fromEntries(sortedCounts);
-    let resultProbSums = sortedProbSums;
-    let resultAvgPositions = sortedAvgPositions;
-
-    // let newPop0={}
-
-    const popularMotifs0 = Object.keys(motif_data);
-  
-    // Initialize an empty object to store the 3rd values
-    const thirdValues = {};
-  
-    // Loop over each key in the jsonData object
-    for (const key in motif_data) {
-        if (motif_data.hasOwnProperty(key)) {
-            // Access and store the 3rd value ([min_0th_index, min_1st_index]) for the current key
-            thirdValues[key] = motif_data[key][5];
-        }
-    }
-  
-    
-    // Return the result
-    return [sequences,probability]
+    return [sequenceL0,sequenceL1];
   }
 
-  
-
-  async function return_popular_motifs1(modelType,N) {
-        // Load and process the CSV file
-      const motif_data = await d3.json("https://raw.githubusercontent.com/vikash06131721/Data-host/main/group0.json");
-      let all_data;
-      if(modelType=="BiLSTM_T5"){
-          all_data = await d3.csv("cas9_bisltm_t5.csv");
-
-          // all_data = await d3.csv("cas9_bisltm_t5_new.csv");
-        }
-      else if(modelType=="CNN_T5"){
-          // all_data = await  d3.csv("cas9_cnn_t5.csv");
-          all_data = await  d3.csv("cas9_cnn_t5.csv");
-
-      
-        }
-      else if(modelType=="BiLSTM_GPT2"){
-          // all_data = await d3.csv("cas9_bilstm_gpt2.csv");
-          all_data = await d3.csv("cas9_bilstm_gpt2.csv");
-
-    
-        }
-      else if(modelType=="BiLSTM_Bert"){
-          // all_data = await d3.csv("cas9_bert_lstm.csv");
-          all_data = await d3.csv("cas9_bert_lstm.csv");
-
-    
-        }
-      else if(modelType=="CNN_gpt2"){
-          // "https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all_gpt2_cnn_files.csv"
-          // all_data = await d3.csv("cas9_cnn_gpt2.csv");
-          all_data = await d3.csv("cas9_cnn_gpt2.csv");
-
-    
-        }
-      else if(modelType=="CNN_Bert"){
-          // all_data = await d3.csv("cas9_bert_cnn.csv");
-          all_data = await d3.csv("cas9_bert_cnn.csv");
-
-    
-        }
-      else if(modelType=="Trans_Gpt2"){
-          // all_data = await d3.csv("cas9_gpt2_only.csv");
-          all_data = await d3.csv("cas9_gpt2_only.csv");
-
-    
-        }
-      else if(modelType=="Trans_T5"){
-          // all_data = await d3.csv("cas9_t5_only.csv");
-          all_data = await d3.csv("cas9_t5_only.csv");
-
-    
-        }
-      else if(modelType=="Trans_Bert"){
-          // all_data = await d3.csv("cas9_bert_only.csv");
-          all_data = await d3.csv("cas9_bert_only.csv");
-
-        }
-        
-        let strings=[];
-        let probs=[]
-        let all_pos=[]
-        all_data.forEach(d => {
-          if(d.label==1){
-            const mot = d.align_motifs;
-            const pos = d.align_start_stop
-            let pos1 = pos.replace(/'/g, '"')
-            let pos2 = pos1.replace('None','[0,0]')
-            strings.push(JSON.parse(mot.replace(/'/g, '"')))
-            probs.push(JSON.parse(d.prob))
-            all_pos.push(JSON.parse(pos2))
-          }
-        });
-        let sequenceData = {};
-
-        strings.forEach((seqList, index) => {
-            seqList.forEach((seq, seqIndex) => {
-                const [startPos, endPos] = all_pos[index][seqIndex];
-                const positionSpread = endPos - startPos;
-                const allowedSpread = Math.ceil(seq.length * 1.5); // 50% more than the length of the sequence
-
-                if (positionSpread <= allowedSpread) {
-                    if (!sequenceData[seq]) {
-                        sequenceData[seq] = {
-                            positions: {},
-                            totalProb: 0,
-                            count: 0
-                        };
-                    }
-                    // Record each start and end position pair along with their occurrences
-                    const posKey = `${startPos}-${endPos}`;
-                    if (!sequenceData[seq].positions[posKey]) {
-                        sequenceData[seq].positions[posKey] = 0;
-                    }
-                    sequenceData[seq].positions[posKey] += 1;
-
-                    sequenceData[seq].totalProb += probs[index][seqIndex];
-                    sequenceData[seq].count += 1;
-                }
-            });
-        });
-
-        // After collecting data, determine the most frequent range for each sequence
-        Object.keys(sequenceData).forEach(seq => {
-            const posEntries = Object.entries(sequenceData[seq].positions);
-            const mostCommonPos = posEntries.reduce((max, entry) => {
-                return (entry[1] > max[1]) ? entry : max;
-            }, ['', 0]); // Initialize with empty string and zero count
-
-            // Update sequenceData with the most common start and end positions
-            const [mostCommonStart, mostCommonEnd] = mostCommonPos[0].split('-').map(Number);
-            sequenceData[seq].mostCommonStart = mostCommonStart;
-            sequenceData[seq].mostCommonEnd = mostCommonEnd;
-
-            // Optional: clean up by removing the 'positions' object if not needed further
-            delete sequenceData[seq].positions;
-        });
-
-
-
-        const entriesArray = Object.entries(sequenceData).map(([seq, data]) => {
-          return {
-              sequence: seq, // Adding the sequence string to the object
-              ...data // Spread the existing data properties
-          };
-        });
-        
-        // Sort the array based on the 'count' property in descending order
-        entriesArray.sort((a, b) => b.count - a.count);
-        
-        // Get the top 40 entries
-        const topFortyEntries = entriesArray;
-
-        const nonOverlappingEntries = [];
-        const addEntryIfNonOverlapping = (entry) => {
-            for (let existingEntry of nonOverlappingEntries) {
-                // Check for overlap
-                if (!(entry.mostCommonEnd < existingEntry.mostCommonStart || entry.mostCommonStart > existingEntry.mostCommonEnd)) {
-                    return false; // There is an overlap, do not add this entry
-                }
-            }
-            return true; // No overlaps found, this entry can be added
-        };
-        
-        for (let entry of topFortyEntries) {
-            if (nonOverlappingEntries.length >= 200) {
-                break; // Stop if we already have 10 non-overlapping entries
-            }
-            if (addEntryIfNonOverlapping(entry)) {
-                nonOverlappingEntries.push(entry); // Add to the list if non-overlapping
-            }
-        }
-
-        // console.log(nonOverlappingEntries); // This will show the top 10 non-overlapping entries based on count
-
-        const sequences = {};
-        const probability = {};
-
-        nonOverlappingEntries.forEach(entry => {
-            sequences[entry.sequence] = [entry.mostCommonStart,entry.mostCommonEnd, entry.count ];
-            probability[entry.sequence] = entry.totalProb / entry.count;
-        });
-    
-    
-        // Flatten the structures and prepare for counting, summing probabilities, and positions
-        let combined = [];
-        let posIndex = 0; // To keep track of corresponding positions
-        strings.forEach((sublist, index) => {
-          sublist.forEach((item, subIndex) => {
-            combined.push({ item: item, prob: probs[index][subIndex], pos: all_pos[index][subIndex] });
-          });
-        });
-    
-        // Count frequencies, sum probabilities, and sum positions
-        let counts = {};
-        let probSums = {};
-        let posSums={};
-        combined.forEach(({ item, prob, pos }) => {
-          counts[item] = (counts[item] || 0) + 1;
-          probSums[item] = (probSums[item] || 0) + prob;
-    
-          // console.log("POS values",pos);
-          // console.log("POS values item",posSums[item]);
-          
-        });
-    
-        // let posSums = {};
-    
-        // Sum positions for each item
-        combined.sort((a, b) => a.pos[1] - b.pos[1]);
-        // Filter out overlapping intervals
-        let lastEnd = -Infinity;
-        const new_combined = combined.filter(interval => {
-            if (interval.pos[0] >= lastEnd) {
-                lastEnd = interval.pos[1];
-                return true;
-            }
-            return false;
-        });
-        try {
-          new_combined.forEach(entry => {
-                if (!posSums[entry.item]) {
-                    posSums[entry.item] = [0, 0];
-                }
-                posSums[entry.item][0] += entry.pos[0];
-                posSums[entry.item][1] += entry.pos[1];
-            });
-        } catch (error) {
-            console.error("Error summing positions:", error);
-        }
-    
-        // Compute average positions and round to nearest integer
-        let avgPositions = {};
-    
-        try {
-            Object.keys(posSums).forEach(item => {
-                let avgPos = [
-                    Math.round(posSums[item][0] / counts[item]), 
-                    Math.round(posSums[item][1] / counts[item])
-                ];
-                avgPositions[item] = avgPos;
-            });
-        } catch (error) {
-            console.error("Error computing average positions:", error);
-        }
-    
-    
-    
-        // Calculate average positions and round them
-        
-    
-        // Sort by frequency in decreasing order and then slice the top 5
-        let sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, N);
-    
-        // Extract top 5 items for probability sums and average positions to match the sorted and sliced counts
-        let sortedProbSums = {};
-        let sortedAvgPositions = {};
-        sortedCounts.forEach(([item, _]) => {
-          sortedProbSums[item] = probSums[item];
-          sortedAvgPositions[item] = avgPositions[item];
-        });
-    
-        // Convert to the desired object format
-        let resultCounts = Object.fromEntries(sortedCounts);
-        let resultProbSums = sortedProbSums;
-        let resultAvgPositions = sortedAvgPositions;
-    
-        // let newPop0={}
-    
-        const popularMotifs0 = Object.keys(motif_data);
-      
-        // Initialize an empty object to store the 3rd values
-        const thirdValues = {};
-      
-        // Loop over each key in the jsonData object
-        for (const key in motif_data) {
-            if (motif_data.hasOwnProperty(key)) {
-                // Access and store the 3rd value ([min_0th_index, min_1st_index]) for the current key
-                thirdValues[key] = motif_data[key][5];
-            }
-        }
-      
-        // Return the result
-        return [sequences,probability]
-        // return [avgPositions,probSums];
-      }
-  
 
   //block for each model output
   function createHtmlViews(uniqueId,width_style) {
@@ -768,15 +288,6 @@ function consoleEvent(event){
     viewer1.id = uniqueId; // Setting a unique ID to the div
     viewer1.classList.add("seq-viewer");
     viewer1.style.width = width_style;
-
-      // viewer1.style.height = "90%";
-      // viewer1.style.overflowX = "auto";
-      // viewer1.style.border = "1px solid white";
-      // viewer1.style.float = "right";
-      // viewer1.style.fontSize = "10px";
-      // viewer1.style.position = "absolute";
-      // viewer1.style.bottom = "0"; // Move to the bottom
-      // viewer1.style.right = "0"; // Align to the right, ensures centering if left is also set to 0
 
     return viewer1; // Return the created div element
   }
@@ -829,12 +340,13 @@ function consoleEvent(event){
       viewer.appendChild(textContainer);
 
       let N=10;
-      const [pop0,all_prob0] = await return_popular_motifs0(motif[i],N);
+      /*const [pop0,all_prob0] = await return_popular_motifs0(motif[i],N);
       const [pop1,all_prob1]= await return_popular_motifs1(motif[i],N);
 
       let keys1 = Object.keys(pop0); // Get all keys
       let keys2 = Object.keys(pop1);
-
+        */
+      let [datL0,datL1] =  await return_popular_motifs0(motif[i],N);
 
       const viewer1 = document.createElement("div");
       viewer1.id = "viewer1"+motif[i]; // Setting a unique ID to the div
@@ -848,52 +360,11 @@ function consoleEvent(event){
       });
       viewer.append(viewer1);
 
+        createDualChart(viewer1, datL0, color_hues_for_blues, "Pathogenic", datL1,
+            color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
 
-      // Convert the dictionary into a sorted array of index ranges
-      const indexRanges = Object.entries(pop0).map(([key, value]) => {
-        // Destructure the array to get startPos, endPos, and count directly
-        const [startPos, endPos, count] = value;
-        return {
-            start: startPos,
-            end: endPos,
-            keys: key,
-            count: count // include count here
-        };
-    }).filter(d => d.end - d.start <= 50) 
-     .sort((a, b) => a.start - b.start); // Sorting by start position
-
-      let indexRangesProb = indexRanges.map(item => {
-        // Copy the original item
-        let newItem = {...item};
-        // Add the 'prob' key with the corresponding value from the probDict
-        newItem.prob = all_prob0[item.keys];
-        return newItem;
-      });
-
-  
-      // Convert the dictionary into a sorted array of index ranges
-      const indexRanges1 = Object.entries(pop1).map(([key, value]) => {
-        // Destructure the array to get startPos, endPos, and count directly
-        const [startPos, endPos, count] = value;
-        return {
-            start: startPos,
-            end: endPos,
-            keys: key,
-            count: count // include count here
-        };
-    }).filter(d => d.end - d.start <= 50) 
-      .sort((a, b) => a.start - b.start); // Sorting by start position
-
-
-      let indexRangesProb1 = indexRanges1.map(item => {
-        // Copy the original item
-        let newItem = {...item};
-        // Add the 'prob' key with the corresponding value from the probDict
-        newItem.prob = all_prob1[item.keys];
-        return newItem;
-    });
-      createDualChart(viewer1, indexRangesProb, color_hues_for_blues, "Pathogenic", indexRangesProb1, 
-      color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
+      // createDualChart(viewer1, indexRangesProb, color_hues_for_blues, "Pathogenic", indexRangesProb1,
+      // color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
       motifSingle.appendChild(viewer);
     }
   }
@@ -955,12 +426,14 @@ function consoleEvent(event){
   
       let paddedSeq = seq.padEnd(maxSeqLength, ' ');
       let modifiedSeq = '';
-  
+
+
+      //TODO: handle this!!! click nothing clickedPos
       if (highlightRange.length === 0) {
         modifiedSeq = paddedSeq; // Display without highlights if highlightRange is empty
       } else {
         for (let i = 0; i < paddedSeq.length; i++) {
-          if (i >= highlightRange[0] && i <= highlightRange[1]) {
+          if (i == clickedPos) {
             modifiedSeq += `<span class="highlight">${paddedSeq[i]}</span>`;
           } else {
             modifiedSeq += paddedSeq[i];
@@ -984,7 +457,7 @@ function consoleEvent(event){
       // Scroll adjustment to center the highlighted area if highlightRange is not empty
       const characterWidth = getCharacterWidth("'Courier New', monospace", "18px");
       const viewableAreaWidth = container.clientWidth; 
-      const midPoint = (highlightRange[0] + highlightRange[1]) / 2;
+      const midPoint = clickedPos//(highlightRange[0] + highlightRange[1]) / 2;
       const scrollPosition = midPoint * characterWidth - viewableAreaWidth / 2;
       setTimeout(() => panel.scrollLeft = scrollPosition, 0);
     }
