@@ -103,4 +103,17 @@ $( document ).ready(function(){
 
   const models =["BiLSTM_T5","BiLSTM_GPT2","CNN_T5","CNN_gpt2","CNN_Bert","Trans_T5","Trans_Gpt2","Trans_Bert","BiLSTM_Bert"];
   modelViewer(models.length, "gray",models);
+
+  var content = document.querySelector('#accordion-wrapper');
+  var offset = 0;//panel.offsetWidth - panel.clientWidth;
+
+  // content.style['left'] = -offset + 'px';
+  // content.style['width'] = (content.offsetWidth + offset) + 'px';
+  // content.style['float'] = 'left';
+  // content.style['margin-right'] = -offset + 'px';
+
+  // content.addEventListener('scroll', function(event) {
+  //   panel.scrollTop = event.target.scrollTop;
+  // });
+
 });

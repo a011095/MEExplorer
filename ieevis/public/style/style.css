@@ -1,14 +1,20 @@
 /*!* sequence viewer *!*/
+/*.seq-viewer{*/
+/*    height: 90%;*/
+/*    border: 1px solid white;*/
+/*    overflow-x: auto;*/
+/*    float: right;*/
+/*    font-size: 10px;*/
+/*    position: absolute;*/
+/*    bottom: 0px;*/
+/*}*/
 .seq-viewer{
     height: 90%;
-    border: 1px solid white;
-    overflow-x: auto;
-    float: right;
-    font-size: 10px;
-    position: absolute;
-    bottom: 0px;
 }
 
+[tabindex]:focus {
+    outline: none;
+}
 
 .motif-viewer{
     width: 98%;
@@ -17,6 +23,7 @@
     float: right;
     margin-top: 10px;
     position: relative;
+
     transform-style: translateX(-8px);
 }
 
@@ -54,12 +61,12 @@
     left: 10px;
 }
 
-#controls {
-    font-size: 14px;
-    position: absolute;
-    top: 220px;
-    left: 730px;
-}
+/*#controls {*/
+/*    font-size: 14px;*/
+/*    position: absolute;*/
+/*    top: 220px;*/
+/*    left: 730px;*/
+/*}*/
 
 #data-vis{
     width: 95vw;
@@ -135,9 +142,37 @@
     float: left;
     margin-left: 15px;
     overflow-y: auto;
+    overflow-x: hidden;
     left: 90px;
 
 }
+
+/*https://stackoverflow.com/questions/30529124/place-the-scrollbar-at-the-bottom-of-viewport*/
+
+#accordion-wrapper{
+    width: 48vw;
+    height: 300px;
+    border: 1px solid white;
+    float: left;
+    position:absolute;
+    bottom:-10px;
+    left:10px;
+    overflow: scroll;
+}
+
+#model-wrapper{
+    width: 48vw;
+    height: 800px;
+    border: 1px solid white;
+    float: left;
+    position:absolute;
+    bottom:0px;
+    left:10px;
+    overflow-y: auto;
+    top:10px;
+
+}
+
 #legend-wrapper{
     width: 150px;
     height: 30px;
@@ -158,29 +193,7 @@
     left:130px;
 
 }
-#accordion-wrapper{
-    width: 80vw;
-    height: 300px;
-    border: 1px solid white;
-    float: left;
-    position:absolute;
-    bottom:-10px;
-    left:10px;
 
-}
-
-#model-wrapper{
-    width: 95vw;
-    height: 800px;
-    border: 1px solid white;
-    float: left;
-    position:absolute;
-    bottom:0px;
-    left:10px;
-    overflow-y: auto;
-    top:10px;
-
-}
 #legend-wrapper3{
     width: 290px;
     height: 40px;
@@ -299,25 +312,20 @@
     border: 1px solid white;
 }
 
-.slider-container2 {
-    display: flex;
-    width: 300px;
-    flex-direction: column;
-    left: 450px;
-    position: relative;
-    margin-top: -40px;
-    border: 1px solid white;
-}
+/*.slider-container2 {*/
+/*    display: flex;*/
+/*    width: 300px;*/
+/*    flex-direction: column;*/
+/*    left: 450px;*/
+/*    position: relative;*/
+/*    margin-top: -40px;*/
+/*    border: 1px solid white;*/
+/*}*/
 
-#threshold-slider.ui.range.slider {
-    width: 90%;  /* Ensures the slider takes full width of its container */
-    left:20px;
-    bottom:20px;
 
-}
 
 #threshold-slider2.ui.range.slider {
-    width: 90%;  /* Ensures the slider takes full width of its container */
+    width: 40%;  /* Ensures the slider takes full width of its container */
     left:10px;
     bottom:1px;
 

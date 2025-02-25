@@ -3,7 +3,7 @@ html(lang="en")
   head
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title MotifVis 2024
+    title MEexplorer
     // Semantic UI CSS
 
     script(src="https://code.jquery.com/jquery-3.2.1.min.js")
@@ -16,19 +16,21 @@ html(lang="en")
 
   body
     #headline-container.ui.inverted.segment
-      h1#headline.ui.header.centered MotifVis
+      h1#headline.ui.header.centered MEexplorer
     //- .four.wide.column
     //-   #control-vis.ui.container.fluid.raised.segment
     
     .ui.grid
-      .sixteen.wide.column
-        #control-vis.ui.container.fluid.raised.segment
-          div.ui.buttons
-            button.ui.button.active#sim_button Similarity
-            button.ui.button#consensus_button Consensus
-
-          .slider-container2
+      .one.wide.column
+      .two.wide.column
+        div.ui.buttons
+          button.ui.button.active#sim_button Similarity
+          button.ui.button#consensus_button Consensus
+      .thirteen.wide.column
+        .ui.grid
+          .one.wide.column
             h4.ui.header Feature Threshold:
+          .column.eight.wide
             .ui.grid
               .row
                 .column.align-left1
@@ -36,9 +38,38 @@ html(lang="en")
                 .column.align-right1
                   span.max-value2 437
             .ui.range.slider#threshold-slider2
-            .slider-tooltip 0  // Tooltip placed here, after the slider
-            .current-value-container1
-              span.current-value1
+              .slider-tooltip 0  // Tooltip placed here, after the slider
+              .current-value-container1
+                span.current-value1
+        //.slider-container2
+
+      //.sixteen.wide.column
+      //  #control-vis.ui.container.fluid.raised.segment
+      //    .two.wide.column
+      //      div.ui.buttons
+      //        button.ui.button.active#sim_button Similarity
+      //        button.ui.button#consensus_button Consensus
+      //    .eight.wide.column
+      //      .slider-container2
+      //        .ui.grid
+      //          .two.column.row
+      //            .column.eight.wide
+      //              h4.ui.header Feature Threshold:
+      //            .column.eight.wide
+      //              .ui.grid
+      //                .row
+      //                  .column.align-left1
+      //                    span.min-value1 0
+      //                  .column.align-right1
+      //                    span.max-value2 437
+            //h4.ui.header Feature Threshold:
+            //.ui.grid
+            //  .row
+            //    .column.align-left1
+            //      span.min-value1 0
+            //    .column.align-right1
+            //      span.max-value2 437
+
         //- .slider-container
         //-   h4.ui.header Motif Distance
         //-   .ui.grid
@@ -86,10 +117,10 @@ html(lang="en")
       
       .eight.wide.column
         #motif-container.ui.raised.segment
-
+          //.horizontal-scrollbar
           #accordion-wrapper.ui.container.fluid.raised.segment
-           
-          #model-wrapper.ui.container.fluid.raised.segment          
+
+          #model-wrapper.ui.container.fluid.raised.segment
 
     
     // Your custom scripts here

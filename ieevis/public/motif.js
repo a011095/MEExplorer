@@ -5,36 +5,45 @@ import { color_hues_green_ } from './scatter_d3.js';
 
 let seqLen = 3065
 
+const svgGlobal = {}
+const containerNames = []
+//let brush;
+
+let clickedPos;
 
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId, align_sequences, accordion_table, ids_list, labels_list,model) {
 
 
-    const width = 1000;
-  const height = 100;
-  const chartHeight = height / 2 - 20;
+
+
+
   // const gap = 10; 
   const margins = { top: 40, right: 10, bottom: 0, left: 2 };
+  const width = $('#accordion-wrapper').width() - margins.right - margins.left;
+    const height = 100;
+    const chartHeight = height / 2 - 20;
   const barHeight = 20;
-
-
 
 
   const svg = d3.select(container).append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("tabindex",0)
       .attr("width", width)
       .attr("height", height)
       .attr("id", chartId)
       .style("max-width", "100%")
       .style("height", "auto");
 
-    // svg
-
+    svgGlobal[container.id] = svg;
+    containerNames.push(container.id)
 
 
   const xScale = d3.scaleLinear()
       .domain([0, 3065])
       .range([margins.left, width - margins.right - 20]);
 
+
+    let _xScale = xScale.copy();
 
   const chartGroups = [
       svg.append("g").attr("transform", `translate(0, 0)`).attr("id", "line1"+model),
@@ -57,18 +66,6 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     //     .text(label); // Text content
 });
 
-  //console.log(data1)
-    // .attr("x", function(d,i){
-    //     //console.log(xScale(i))
-    //     return xScale(i);
-    // })
-  // Ensure data objects have 'start' and 'end' attributes
-   // console.log(data1)
-
-    // const brush = d3.brush()
-    //     .on("end", brushed);
-
-
     let maxprob = data1.reduce((max, obj) => obj.prob > max ? obj.prob : max, data1[0].prob);
     let minprob = data1.reduce((min, obj) => obj.prob < min ? obj.prob : min, data1[0].prob);
 
@@ -87,11 +84,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         })
         .attr("height", barHeight)
         .attr("fill", d => color1[Math.round((d.prob-minprob)/maxprob * (color1.length - 1))])
-    //.call(brush);
-        // .on("click", function(event, d) {
-        //     createAccordion(align_sequences, 0, accordion_table,
-        //         d, " ", " ", ids_list, labels_list, 437)
-        // });
+
     maxprob = data2.reduce((max, obj) => obj.prob > max ? obj.prob : max, data2[0].prob);
     minprob = data2.reduce((min, obj) => obj.prob < min ? obj.prob : min, data2[0].prob);
 
@@ -127,6 +120,15 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         .translateExtent([[margins.left,0],[width - margins.right - 20,height]])
         .extent([[margins.left,0],[width - margins.right - 20,height]])
         .on("zoom", (event) => {
+            console.log(event.type)
+
+            const t = event.transform;
+
+            // Update the x scale
+            _xScale = t.rescaleX(xScale);
+
+            if (event.type === "brush") return;
+            //console.log("test")
             const xz = event.transform.rescaleX(xScale);
             svg.selectAll("rect")
                 .attr("x", d => xz(d.ind))
@@ -149,8 +151,10 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         });
 
     // Brushing
-    const brush = d3.brush().on('brush end', () => {
-        if (event.sourceEvent.type === 'zoom') {
+
+        //.on('brush end', () => {
+       // console.log("brush")
+       /* if (event.sourceEvent.type === 'zoom') {
             return;
         }
         if (event.selection === null) {
@@ -163,19 +167,62 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         const startDate = _xScale.invert(x0);
         const endDate = _xScale.invert(x1);
         selectionExtent = [startDate, endDate];
-        renderBars();
-    });
-
-    svg.append("g").call(brush);
+        renderBars();*/
+  //  });
 
 
-  svg.call(zoom)
-    .transition()
-    .duration(500)
-    .call(zoom.scaleTo, 1);
 
-    // Create the brush behavior.
 
+    svg.append("g")
+        .attr("class", "brush_g")
+    //brush_group.call(brush);
+
+    const doc = d3.select(document);
+
+
+    // console.log("#"+container.id)
+    // d3.select("#"+container.id)
+    //     .attr("tabindex",0)
+    svg.on('keydown', (event) => {
+        //console.log(event)
+        if (event.key === "C" || event.key === "c") {
+            //console.log("ctl_brush")
+
+            //console.log(event)
+
+            const brush = d3.brushX()
+                .on("end", ({selection}) =>{
+
+                    const [x0, x1] = selection
+
+                    const startRange = _xScale.invert(x0);
+                    const endRange = _xScale.invert(x1);
+
+
+                    clickedPos = (selection[0] + selection[1] )/2.0;
+                    createAccordion(align_sequences, 0, accordion_table,
+                        [xScale(startRange),xScale(endRange)]   , " ", " ", ids_list, labels_list, 437)
+
+                 //   console.log(sourceEvent.type)
+                    console.log(selection)
+                });
+
+            d3.select(event.srcElement).select(".brush_g").call(brush)
+        }
+    })
+
+    svg.on('keyup', (event) => {
+        //console.log(event)
+        if (event.key === "C" || event.key === "c") {
+            //console.log("ctl_zoom")
+
+
+            d3.select(event.srcElement).call(zoom)
+                    .transition()
+                    .duration(500)
+                    .call(zoom.scaleTo, 1);
+        }
+    })
 }
 
 
@@ -393,12 +440,18 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     container.innerHTML = ''; // Clear previous content
   
     let filteredSequences = sequences; // Use all sequences
+
+
+      //console.log(sequences)
+      //for(let i=0;i<sequences.length;i++){
+      //    console.log(sequences[i].length)
+      //}
     const filteredSequences_new = filteredSequences.slice(0, N);
     const maxSeqLength = Math.max(...filteredSequences_new.map(seq => seq.length));
   
     // CSS for highlighting and panel scrolling
     const style = document.createElement('style');
-    style.textContent = `.highlight { background-color: yellow; } .panel { overflow-x: auto; width: 100%; display: block; } table { width: 100%; table-layout: fixed; } td { font-family: 'Courier New', monospace; vertical-align: top; text-align: left; white-space: pre;}`;
+    style.textContent = `.highlight { background-color: lightgray; } .panel { width: 100%; display: block; } table { width: 100%; table-layout: fixed; } td { font-family: 'Courier New', monospace; vertical-align: top; text-align: left; white-space: pre;}`;
     document.head.appendChild(style);
   
     const panel = document.createElement('div');
@@ -423,6 +476,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       td1.appendChild(document.createTextNode(id_list[index]));
       td1.style.fontSize = "18px";
       td1.style.textAlign = "left";
+      td1.style.fontFamily = "'Courier New', monospace";
+
   
       let paddedSeq = seq.padEnd(maxSeqLength, ' ');
       let modifiedSeq = '';
@@ -433,7 +488,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         modifiedSeq = paddedSeq; // Display without highlights if highlightRange is empty
       } else {
         for (let i = 0; i < paddedSeq.length; i++) {
-          if (i == clickedPos) {
+          if (highlightRange[0] <= i && i <= highlightRange[1]) {
             modifiedSeq += `<span class="highlight">${paddedSeq[i]}</span>`;
           } else {
             modifiedSeq += paddedSeq[i];
@@ -444,6 +499,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       td2.innerHTML = modifiedSeq;
       td2.style.fontSize = "18px";
       td2.style.textAlign = "right";
+      td2.style.fontFamily = "'Courier New', monospace";
   
       tr.appendChild(td1);
       tr.appendChild(td2);
@@ -457,9 +513,19 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       // Scroll adjustment to center the highlighted area if highlightRange is not empty
       const characterWidth = getCharacterWidth("'Courier New', monospace", "18px");
       const viewableAreaWidth = container.clientWidth; 
-      const midPoint = clickedPos//(highlightRange[0] + highlightRange[1]) / 2;
+      const midPoint = (highlightRange[0] + highlightRange[1]) / 2;
+
+
       const scrollPosition = midPoint * characterWidth - viewableAreaWidth / 2;
-      setTimeout(() => panel.scrollLeft = scrollPosition, 0);
+
+        console.log(midPoint,scrollPosition);
+
+      //  container.scrollLeft = scrollPosition
+      //  panel.scrollLeft = scrollPosition
+        const wrapper = document.getElementById('accordion-wrapper')
+      setTimeout(() => container.scrollLeft = scrollPosition, 0);
+        setTimeout(() => wrapper.scrollLeft = scrollPosition, 0);
+
     }
   }
   
