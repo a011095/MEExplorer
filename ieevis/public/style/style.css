@@ -349,14 +349,18 @@
 }
 #label0 {
     position: absolute;
-    left: 20px; /* Adjust as needed to place the label to the left of the container */
-    top: 20px;
+    left: 30px; /* Adjust as needed to place the label to the left of the container */
+    top: 10px;
+    font-family: "Arial Black";
+    font-size: 1rem;
     /* Centers the label vertically relative to the container */
 }
 #label1 {
     position: absolute;
-    left: 20px; /* Adjust as needed to place the label to the left of the container */
-    top: 70px;
+    left: 50px; /* Adjust as needed to place the label to the left of the container */
+    top: 10px;
+    font-family: "Arial Black";
+    font-size: 1rem;
     /* Centers the label vertically relative to the container */
 }
 .slider-tooltip {

@@ -24,7 +24,7 @@ html(lang="en")
       .one.wide.column
       .two.wide.column
         div.ui.buttons
-          button.ui.button.active#sim_button Similarity
+          button.ui.button#sim_button Similarity
           button.ui.button#consensus_button Consensus
       .thirteen.wide.column
         .ui.grid
@@ -41,74 +41,26 @@ html(lang="en")
               .slider-tooltip 0  // Tooltip placed here, after the slider
               .current-value-container1
                 span.current-value1
-        //.slider-container2
 
-      //.sixteen.wide.column
-      //  #control-vis.ui.container.fluid.raised.segment
-      //    .two.wide.column
-      //      div.ui.buttons
-      //        button.ui.button.active#sim_button Similarity
-      //        button.ui.button#consensus_button Consensus
-      //    .eight.wide.column
-      //      .slider-container2
-      //        .ui.grid
-      //          .two.column.row
-      //            .column.eight.wide
-      //              h4.ui.header Feature Threshold:
-      //            .column.eight.wide
-      //              .ui.grid
-      //                .row
-      //                  .column.align-left1
-      //                    span.min-value1 0
-      //                  .column.align-right1
-      //                    span.max-value2 437
-            //h4.ui.header Feature Threshold:
-            //.ui.grid
-            //  .row
-            //    .column.align-left1
-            //      span.min-value1 0
-            //    .column.align-right1
-            //      span.max-value2 437
-
-        //- .slider-container
-        //-   h4.ui.header Motif Distance
-        //-   .ui.grid
-        //-     .row
-        //-       .column.align-left
-        //-         span.min-value 0
-        //-       .column.align-right
-        //-         span.max-value 2620
-        //-   #threshold-slider.ui.range.slider
-        //-   .current-value-container
-        //-     span.current-value
-        
-        
-
-        //- .slider-container2
-        //-   h4.ui.header Feature Selector
-        //-   .ui.grid
-        //-     .row
-        //-       .column.align-left
-        //-         span.min-value 0
-        //-       .column.align-right
-        //-         span.max-value 30
-        //-   #threshold-slider2.ui.range.slider
-        //-   .current-value-container
-        //-     span.current-value
-
-        
-        
-      
       .six.wide.column
         #scatter-vis.ui.container.fluid.raised.segment
-          #label0 Pathogenic
-          #legend-wrapper.ui.raised.segment
-            section#legend-color
-            section#legend-labels
-          #label1 Non-Pathogenic
-          #legend-wrapper1.ui.raised.segment 
-            section#legend-color1
-            section#legend-labels1
+          .ui.grid
+            .two.wide.column
+              #label0 Pathogenic:
+            .four.wide.column
+              #legend-color
+              #legend-labels
+            .three.wide.column
+              #label1 Non-Pathogenic:
+            .four.wide.column
+              section#legend-color1
+              section#legend-labels1
+          //#legend-wrapper.ui.raised.segment
+          //
+          //
+          //#legend-wrapper1.ui.raised.segment
+          //  section#legend-color1
+          //  section#legend-labels1
         #heat-vis.ui.container.fluid.raised.segment 
           
           select.ui.selection.dropdown#metric_type

@@ -30,72 +30,6 @@ export function heatmapN(vis, headline, metric, agg_data,myColor) {
   }
 }
 
-// function scatterN(model) {
-//   let svgContainer = d3.select("#" + "scatter-vis" + " svg");
-
-//   if (svgContainer.empty()) {
-//     console.log("scatter does not exist.");
-//     return false
-//   } else {
-//     console.log("SCatter does  exist.");
-//   }
-// }
-
-
-async function setupButtonListeners(selected_array) {
-  // Listen for clicks on buttons within the dimensionality-reduction-box
-  const dim_red=[];
-  console.log("from button selectors",selected_array);
-  
-  document.getElementById('dimensionality-reduction-box').addEventListener('click', function(event) {
-      if (event.target.tagName === 'BUTTON') {
-          // console.log(event.target.value + " has been selected");
-          dim_red.length=0;
-          dim_red.push(event.target.value);
-      }
-      
-  });
-
-  // Listen for clicks on buttons within the scatter-box
-  const scatter_box_list=[];
-  document.getElementById('scatter-box').addEventListener('click', function(event) {
-      if (event.target.tagName === 'BUTTON') {
-          console.log(event.target.value + " has been selected");
-          scatter_box_list.length=0;
-
-          scatter_box_list.push(event.target.value);          
-      }
-      
-  document.getElementById('generate-box').addEventListener('click', function(event) {
-
-    console.log("generate button has been clicked!!");
-    
-    if(document.getElementById("scatter-plot").innerHTML!=""){
-      document.getElementById("scatter-plot").innerHTML=""; 
-    
-    }
-    if(selected_array[0][1]=="T5"){
-
-      if(dim_red[0]=="TSNE" & scatter_box_list[0]=="Scatter"){
-        console.log("TSNE and Scatter Selected")
-  
-        scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/t5_tsne_normal.csv", "#scatter-plot");
-      }
-
-    if(dim_red[0]=="TSNE" & scatter_box_list[0]=="UMAP"){
-        console.log("TSNE and UMAP Selected")
-  
-        scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/t5_tsne_umap.csv", "#scatter-plot");
-      }
-    }
-
-
-      }
-  )
-  
-  });
-}
-
 
 export async function heatmap(file_name,vis,headline,metric,agg_data){
   const selected=[];
@@ -103,11 +37,6 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     width = document.getElementById(vis).getBoundingClientRect().width - margin.left - margin.right,
     height = document.getElementById(vis).getBoundingClientRect().height - margin.top - margin.bottom;
 
-  
-  
-  
-  // append the svg object to the body of the page
-  // d3.select("#"+vis).remove();
 
   const svg = d3.select("#"+vis)
   .append("svg")
@@ -173,26 +102,6 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("stroke", "black")
         .style("opacity", 1)
     }
-    // const mousemove = function(event, d) {
-    //   const tooltip = d3.select("#hover");
-    //   tooltip
-    //     .html("Model:"+d.Model+",Emb:"+d.Emb+","+metric+":"+ d.value)
-    //     .style("position", "absolute")
-    //     .style("font","20px Arial")
-    //     // .style("left", (event.pageX) + "px") // Adjust if necessary for offset
-    //     // .style("top", (event.pageY) + "px"); // Adjust if necessary for offset
-    // };
-    // const mouseleave = function(event,d) {
-    //   const tooltip = d3.select("#hover");
-    //   tooltip.html("");
-    //
-    //   d3.select(this)
-    //     .style("stroke", "none")
-    //     .style("opacity", 0.8)
-    // }
-
-    
-
 
     const click = async function(event, d) {
       // Hide any existing tooltips before showing the new one
@@ -214,6 +123,8 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
           .style("opacity", 1)
 
       selected.push([d.Model, d.Emb]);
+
+
       const scatterVis = document.querySelector("#scatter-vis");
       let svgElement = scatterVis.querySelector("svg");
       svgElement.remove();
@@ -224,12 +135,15 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       const color = d3.scaleOrdinal()
         .domain(['0', '1'])
         .range([ "#9ecae1", "#f44336"])
-      // const list = d3.selectAll("#scatter-vis")
-      // list.selectAll("dots").style("fill","yellow");
+        // console.log("selected",selected);
 
-
-      // setupButtonListeners(selected);
-    
+      const selectedDiv = '#viewer1'+ d.Model +'_' +d.Emb;
+      console.log(selectedDiv);
+      d3.selectAll('.motif-viewer1').style('border', 'none');
+      $(selectedDiv).css({
+        'border': '4px solid #4daf4a', // Adds a solid black border
+        'border-radius': '10px'
+      });
       console.log(selected);
   }
 
@@ -259,9 +173,6 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("opacity", 0.8)
         .on("mouseover", mouseover)
         .on("click",click)
-      //.on("mousemove", mousemove)
-      //.on("mouseleave", mouseleave)
-
   })
 
   // Add title to graph
@@ -288,19 +199,6 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   const range = cols.domain();
   const stepSize = (range[1] - range[0]) / (numSteps - 1);
   const legendValues = d3.range(range[0], range[1] + stepSize, stepSize);
-
-
-          
-  
-
-  // const cols = d3.scaleSequential()
-  //         .interpolator(d3.interpolateReds)
-  //         .domain([1,100])
-
-  // const numSteps = 10;
-  // const range = cols.domain();
-  // const stepSize = (range[1] - range[0]) / (numSteps - 1);
-  // const legendValues = d3.range(range[0], range[1] + stepSize, stepSize);
 
   const svgLegend = d3.select("#heat-vis").append("svg")
     .attr("width", 100) // Adjust as needed

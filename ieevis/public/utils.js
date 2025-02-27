@@ -6,8 +6,8 @@ import { scatter } from './scatter_d3.js';
 // import { setupButtonListeners } from './drawHeat.js';
 import { modelViewer } from './motif.js';
  // renderHeat(data1)
-const dictinary={"acc":"https://raw.githubusercontent.com/vikash06131721/Data-host/main/files.csv",
- "f1":"https://raw.githubusercontent.com/vikash06131721/Data-host/main/files1.csv"};
+const dictinary={"acc":"/dat/files.csv",
+ "f1":"/dat/files1.csv"};
 
 async function aggregateDataFromCSVs(dict) {
   let aggregatedData = {};
@@ -38,7 +38,7 @@ async function renderChart(data_val,agg_data){
   if (data_val=="accuracy"){
     const tf =heatmapN("heat-vis", " ", "acc", agg_data,cols)
     if (tf==false){
-      const select = await heatmap("https://raw.githubusercontent.com/vikash06131721/Data-host/main/files.csv","heat-vis","Accuracy Heat Map","acc",agg_data)
+      const select = await heatmap("/dat/files.csv","heat-vis","Accuracy Heat Map","acc",agg_data)
       // scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all.csv",select[1])
     }
     else{
@@ -48,7 +48,7 @@ async function renderChart(data_val,agg_data){
     // Assuming you have another URL or selector for precision
     const tf= heatmapN("heat-vis", " ", "f1", agg_data,cols)
     if(tf==false){
-      const select = await heatmap("https://raw.githubusercontent.com/vikash06131721/Data-host/main/files1.csv", "heat-vis","F1 Score Heat Map","f1",agg_data);
+      const select = await heatmap("/dat/files1.csv", "heat-vis","F1 Score Heat Map","f1",agg_data);
       // scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all.csv",select[1])
     }
     else{
@@ -101,9 +101,10 @@ $( document ).ready(function(){
 
       }})
 
-  const models =["BiLSTM_T5","BiLSTM_GPT2","CNN_T5","CNN_gpt2","CNN_Bert","Trans_T5","Trans_Gpt2","Trans_Bert","BiLSTM_Bert"];
+  const models =["BiLSTM_T5","BiLSTM_GPT2","CNN_T5","CNN_GPT2","CNN_Bert","Trans_T5","Trans_GPT2","Trans_Bert","BiLSTM_Bert"];
   modelViewer(models.length, "gray",models);
 
+  //$('#sim_button');
   var content = document.querySelector('#accordion-wrapper');
   var offset = 0;//panel.offsetWidth - panel.clientWidth;
 

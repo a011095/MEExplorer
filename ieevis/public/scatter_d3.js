@@ -28,104 +28,16 @@ const colorScales = {
 // const color_hues_green =["#f7fcf5","#f6fcf4","#f6fcf4","#f5fbf3","#f5fbf2","#f4fbf2","#f4fbf1","#f3faf0","#f2faf0","#f2faef","#f1faee","#f1faee","#f0f9ed","#f0f9ec","#eff9ec","#eef9eb","#eef8ea","#edf8ea","#ecf8e9","#ecf8e8","#ebf7e7","#ebf7e7","#eaf7e6","#e9f7e5","#e9f6e4","#e8f6e4","#e7f6e3","#e7f6e2","#e6f5e1","#e5f5e1","#e4f5e0","#e4f4df","#e3f4de","#e2f4dd","#e1f4dc","#e1f3dc","#e0f3db","#dff3da","#def2d9","#ddf2d8","#ddf2d7","#dcf1d6","#dbf1d5","#daf1d4","#d9f0d3","#d8f0d2","#d7efd1","#d6efd0","#d5efcf","#d4eece","#d4eece","#d3eecd","#d2edcb","#d1edca","#d0ecc9","#cfecc8","#ceecc7","#cdebc6","#ccebc5","#cbeac4","#caeac3","#c9eac2","#c8e9c1","#c6e9c0","#c5e8bf","#c4e8be","#c3e7bd","#c2e7bc","#c1e6bb","#c0e6b9","#bfe6b8","#bee5b7","#bde5b6","#bbe4b5","#bae4b4","#b9e3b3","#b8e3b2","#b7e2b0","#b6e2af","#b5e1ae","#b3e1ad","#b2e0ac","#b1e0ab","#b0dfaa","#aedfa8","#addea7","#acdea6","#abdda5","#aadca4","#a8dca3","#a7dba2","#a6dba0","#a5da9f","#a3da9e","#a2d99d","#a1d99c","#9fd89b","#9ed799","#9dd798","#9bd697","#9ad696","#99d595","#97d494","#96d492","#95d391","#93d390","#92d28f","#91d18e","#8fd18d","#8ed08c","#8ccf8a","#8bcf89","#8ace88","#88cd87","#87cd86","#85cc85","#84cb84","#82cb83","#81ca82","#80c981","#7ec980","#7dc87f","#7bc77e","#7ac77c","#78c67b","#77c57a","#75c479","#74c478","#72c378","#71c277","#6fc276","#6ec175","#6cc074","#6bbf73","#69bf72","#68be71","#66bd70","#65bc6f","#63bc6e","#62bb6e","#60ba6d","#5eb96c","#5db86b","#5bb86a","#5ab769","#58b668","#57b568","#56b467","#54b466","#53b365","#51b264","#50b164","#4eb063","#4daf62","#4caf61","#4aae61","#49ad60","#48ac5f","#46ab5e","#45aa5d","#44a95d","#42a85c","#41a75b","#40a75a","#3fa65a","#3ea559","#3ca458","#3ba357","#3aa257","#39a156","#38a055","#379f54","#369e54","#359d53","#349c52","#339b51","#329a50","#319950","#30984f","#2f974e","#2e964d","#2d954d","#2b944c","#2a934b","#29924a","#28914a","#279049","#268f48","#258f47","#248e47","#238d46","#228c45","#218b44","#208a43","#1f8943","#1e8842","#1d8741","#1c8640","#1b8540","#1a843f","#19833e","#18823d","#17813d","#16803c","#157f3b","#147e3a","#137d3a","#127c39","#117b38","#107a37","#107937","#0f7836","#0e7735","#0d7634","#0c7534","#0b7433","#0b7332","#0a7232","#097131","#087030","#086f2f","#076e2f","#066c2e","#066b2d","#056a2d","#05692c","#04682b","#04672b","#04662a","#03642a","#036329","#026228","#026128","#026027","#025e27","#015d26","#015c25","#015b25","#015a24","#015824","#015723","#005623","#005522","#005321","#005221","#005120","#005020","#004e1f","#004d1f","#004c1e","#004a1e","#00491d","#00481d","#00471c","#00451c","#00441b"]
 const color_hues_green = ["#fff5f0","#fff4ef","#fff4ee","#fff3ed","#fff2ec","#fff2eb","#fff1ea","#fff0e9","#fff0e8","#ffefe7","#ffeee6","#ffeee6","#ffede5","#ffece4","#ffece3","#ffebe2","#feeae1","#fee9e0","#fee9de","#fee8dd","#fee7dc","#fee6db","#fee6da","#fee5d9","#fee4d8","#fee3d7","#fee2d6","#fee2d5","#fee1d4","#fee0d2","#fedfd1","#feded0","#feddcf","#fedccd","#fedbcc","#fedacb","#fed9ca","#fed8c8","#fed7c7","#fdd6c6","#fdd5c4","#fdd4c3","#fdd3c1","#fdd2c0","#fdd1bf","#fdd0bd","#fdcfbc","#fdceba","#fdcdb9","#fdccb7","#fdcbb6","#fdc9b4","#fdc8b3","#fdc7b2","#fdc6b0","#fdc5af","#fdc4ad","#fdc2ac","#fdc1aa","#fdc0a8","#fcbfa7","#fcbea5","#fcbca4","#fcbba2","#fcbaa1","#fcb99f","#fcb89e","#fcb69c","#fcb59b","#fcb499","#fcb398","#fcb196","#fcb095","#fcaf94","#fcae92","#fcac91","#fcab8f","#fcaa8e","#fca98c","#fca78b","#fca689","#fca588","#fca486","#fca285","#fca183","#fca082","#fc9e81","#fc9d7f","#fc9c7e","#fc9b7c","#fc997b","#fc987a","#fc9778","#fc9677","#fc9475","#fc9374","#fc9273","#fc9071","#fc8f70","#fc8e6f","#fc8d6d","#fc8b6c","#fc8a6b","#fc8969","#fc8868","#fc8667","#fc8565","#fc8464","#fb8263","#fb8162","#fb8060","#fb7f5f","#fb7d5e","#fb7c5d","#fb7b5b","#fb795a","#fb7859","#fb7758","#fb7657","#fb7455","#fa7354","#fa7253","#fa7052","#fa6f51","#fa6e50","#fa6c4e","#f96b4d","#f96a4c","#f9684b","#f9674a","#f96549","#f86448","#f86347","#f86146","#f86045","#f75e44","#f75d43","#f75c42","#f65a41","#f65940","#f6573f","#f5563e","#f5553d","#f4533c","#f4523b","#f4503a","#f34f39","#f34e38","#f24c37","#f24b37","#f14936","#f14835","#f04734","#ef4533","#ef4433","#ee4332","#ed4131","#ed4030","#ec3f2f","#eb3d2f","#eb3c2e","#ea3b2d","#e93a2d","#e8382c","#e7372b","#e6362b","#e6352a","#e5342a","#e43229","#e33128","#e23028","#e12f27","#e02e27","#df2d26","#de2c26","#dd2b25","#dc2a25","#db2924","#da2824","#d92723","#d72623","#d62522","#d52422","#d42321","#d32221","#d22121","#d12020","#d01f20","#ce1f1f","#cd1e1f","#cc1d1f","#cb1d1e","#ca1c1e","#c91b1e","#c71b1d","#c61a1d","#c5191d","#c4191c","#c3181c","#c2181c","#c0171b","#bf171b","#be161b","#bd161a","#bb151a","#ba151a","#b91419","#b81419","#b61419","#b51319","#b41318","#b21218","#b11218","#b01218","#ae1117","#ad1117","#ac1117","#aa1017","#a91016","#a71016","#a60f16","#a40f16","#a30e15","#a10e15","#a00e15","#9e0d15","#9c0d14","#9b0c14","#990c14","#970c14","#960b13","#940b13","#920a13","#900a13","#8f0a12","#8d0912","#8b0912","#890812","#870811","#860711","#840711","#820711","#800610","#7e0610","#7c0510","#7a0510","#78040f","#76040f","#75030f","#73030f","#71020e","#6f020e","#6d010e","#6b010e","#69000d","#67000d"]
 export const color_hues_green_= color_hues_green.slice(-180)
-export const selectedColors_sim_green = getSelectedColors(color_hues_green_);
 
-// const classes = [
-//   "BiLSTM_T5"
-// ];
 const classes = [
-  "BiLSTM_T5","BiLSTM_GPT2", "BiLSTM_Bert", "CNN_T5", "CNN_gpt2", 
-  "CNN_Bert", "Trans_Gpt2", "Trans_T5", "Trans_Bert"
+  "BiLSTM_T5","BiLSTM_GPT2", "BiLSTM_Bert", "CNN_T5", "CNN_GPT2",
+  "CNN_Bert", "Trans_GPT2", "Trans_T5", "Trans_Bert"
 ];
-// const thresholdPercentage = 10;
-const totalRange = 2620; // Constant total range
+
 
 function withinThreshold(end1, start2,thresh) {
-    
-    // const gap = (start2 - end1) / totalRange * 100;
     const gap = start2 - end1;
     return gap <= thresh;
-}
-
-
-
-function mergeSegments(segments, threshold, len,colors) {
-  let mergedSegments = [];
-  for (let i = 0; i < len; i++) {
-      let currentSegment = segments[i];
-      if (i === 0) {
-          // First segment automatically starts a new merged segment
-          mergedSegments.push({...currentSegment});
-      } else {
-          let lastMergedSegment = mergedSegments[mergedSegments.length - 1];
-          if (currentSegment.range_start - lastMergedSegment.range_start <= threshold) {
-              // Merge current segment into the last merged segment
-              let lastElement = lastMergedSegment.element;
-              let currentElement = currentSegment.element;
-              let lastLeft = parseFloat(lastElement.style.left);
-              let currentLeft = parseFloat(currentElement.style.left);
-              let currentWidth = parseFloat(currentElement.style.width);
-
-              // Update combined probability
-              let prob1 = parseFloat(lastElement.dataset.prob);
-              let prob2 = parseFloat(currentElement.dataset.prob);
-              let combinedProbability = prob1 + prob2;
-              lastElement.dataset.prob = combinedProbability; // Update the dataset for combined probability
-
-              // Calculate the new width to extend the last element
-              let newWidth = Math.max(lastLeft + parseFloat(lastElement.style.width), currentLeft + currentWidth) - lastLeft;
-              lastElement.style.width = `${newWidth}px`;
-
-              // Update the background color based on combined probability
-              const index = Math.round(combinedProbability * (colors.length - 1));
-              let correspondingColor;
-              if(index>colors.length){
-                correspondingColor = colors[colors.length-1]
-              }
-              else{
-                correspondingColor = colors[index];
-              }
-           
-              lastElement.style.backgroundColor = correspondingColor;
-
-              // Optionally hide the current element since it's merged
-              currentElement.style.display = 'none';
-
-              // Update lastMergedSegment range_start to the minimum
-              lastMergedSegment.range_start = Math.min(lastMergedSegment.range_start, currentSegment.range_start);
-          } else {
-              // Far enough to not merge, start new merged segment
-              mergedSegments.push({...currentSegment});
-          }
-      }
-  }
-  return mergedSegments;
-}
-
-function extract_all_child_nodes_start(lineName,thresh_hold,colors){
-  // const svgContainer = d3.select(`#${svgId}`);
-
-  const childs = d3.select(`#${lineName}`).childNodes
-  const filterNodes = Array.from(childs).filter(
-    (node) => node.id && node.id.includes('segment')
-  );
-  const totalRange = 2950;
-  const viewerWidth = 500;
-  const startPixels ={};
-  filterNodes.forEach((ch, index) => {
-    const lft = parseFloat(ch.style.left); // Get the left style property as a float
-    const range_start = (lft / viewerWidth) * totalRange; // Calculate range start based on left
-    const element = ch;
-    startPixels[index] = { range_start, element}; // Store in an object using the index as the key
-  });
-
-  const merged = mergeSegments(startPixels, thresh_hold,filterNodes.length,colors)
-
-  
-   
-  return startPixels
-  
-
 }
 
 function mergeIntervalsWithProbabilities(intervals, probabilities, sequences,thresh) {
@@ -197,6 +109,26 @@ export function createColorLegendBar(divId,color_hues) {
         colorBlock.style.backgroundColor = color;
         colorBlock.style.flexGrow = 1;
         colorBlock.style.height = '100%';
+
+        let notSelectedClass = '.dot1';
+
+
+        if (divId == 'legend-color1') {
+            notSelectedClass = '.dot0';
+        }
+
+        colorBlock.addEventListener('mouseover', function() {
+            d3.selectAll(notSelectedClass)
+                .style('fill-opacity', 0.3)
+                .style('stroke-opacity', 0.3)
+
+        });
+        colorBlock.addEventListener('mouseout', function() {
+            d3.selectAll(notSelectedClass)
+                .style('fill-opacity', 1.0)
+                .style('stroke-opacity', 1.0)
+
+        });
         legend.appendChild(colorBlock);
     });
 }
@@ -240,13 +172,13 @@ function calculateQ1Q2Q3Q4(sorted_vals, q1,q2,q3,q4){
 
 function findQuartileRange(point, q1, q2, q3, q4) {
     if (point <= q1) {
-      return ['red',40];
+      return ['red',0]; //40
     } else if (point <= q2) {
-      return ['gray',100];
+      return ['gray',45]; //100
     } else if (point <= q3) {
-      return ['blue',150];
+      return ['blue',90]; //150
     } else if (point <= q4) {
-      return ['orange',310];
+      return ['orange',135]; //310
     } else {
       return ["NA",180]; // For points greater than q4
     }
@@ -265,7 +197,6 @@ function calculatePositionOnArc(arcCenterX, arcCenterY, radius, angleDegrees) {
 
 
 function updateDotsColor(svg, data, color_hue,color_hue_green) {
-    //if(useSimScoreForColor){
       svg.selectAll("circle")
           .data(data) // Ensure data is accessible here
           .style("fill", d => {
@@ -295,25 +226,6 @@ function updateDotsColor(svg, data, color_hue,color_hue_green) {
                   return color_hue_green[scoreIndex];
                 }
               })
-              
-    //       }
-    // else {
-    //     svg.selectAll("circle")
-    //     .data(data) // Ensure data is accessible here
-    //     .style("fill", d => {
-    //
-    //           // Use similarity scores to determine color
-    //           if (d.label==0){
-    //             const scoreIndex = Math.floor(d.sim_scores * (color_hue.length - 1));
-    //             return color_hue[scoreIndex];
-    //
-    //           }
-    //           else if(d.label==1){
-    //             const scoreIndex = Math.floor(d.sim_scores * (color_hue_green.length - 1));
-    //             return color_hue_green[scoreIndex];
-    //           }
-    //         })
-    //       }
 }
 
 
@@ -466,7 +378,7 @@ export function scatter(files_name,model){
 
   // set the dimensions and margins of the graph
   let margin,width,height;
-  if (model=="Gpt2"){
+  if (model=="GPT2"){
     margin = {top: 20, right: 0, bottom: 20, left: 10},
       width = document.getElementById("scatter-vis").getBoundingClientRect().width - margin.left - margin.right,
       height = document.getElementById("scatter-vis").getBoundingClientRect().height - margin.top - margin.bottom;
@@ -483,7 +395,6 @@ export function scatter(files_name,model){
       height = document.getElementById("scatter-vis").getBoundingClientRect().height - margin.top - margin.bottom;
 
   }
-
 
   // append the svg object to the body of the page
   const svg = d3.select("#scatter-vis")
@@ -525,7 +436,7 @@ export function scatter(files_name,model){
         .domain([min_val_x, max_val_x])
         .range([ 0, width ]);
     }
-    else if(model=="Gpt2"){
+    else if(model=="GPT2"){
       const max_val_x = math.ceil(math.max(data.map((d)=>d.x_gpt)))
       const min_val_x = math.floor(math.min(data.map((d)=>d.x_gpt)))
       x = d3.scaleLinear()
@@ -552,7 +463,7 @@ export function scatter(files_name,model){
         .domain([min_val_y, max_val_y])
         .range([ height, 0]);
     }
-    else if (model=="Gpt2"){
+    else if (model=="GPT2"){
       const max_val_y = math.ceil(math.max(data.map((d)=>d.y_gpt)))
       const min_val_y = math.floor(math.min(data.map((d)=>d.y_gpt)))
       y = d3.scaleLinear()
@@ -568,8 +479,6 @@ export function scatter(files_name,model){
         .range([ height, 0]);
 
     }
-    
-
 
     // Color scale: give me a specie name, I return a color
     const color = d3.scaleOrdinal()
@@ -580,8 +489,8 @@ export function scatter(files_name,model){
             // Here you can add code to handle the slider value.
             // For example, you might want to log it or update some part of your UI.
             const classes = ["BiLSTM_T5",
-              "BiLSTM_GPT2", "BiLSTM_Bert", "CNN_T5", "CNN_gpt2", 
-              "CNN_Bert", "Trans_Gpt2", "Trans_T5", "Trans_Bert"
+              "BiLSTM_GPT2", "BiLSTM_Bert", "CNN_T5", "CNN_GPT2",
+              "CNN_Bert", "Trans_GPT2", "Trans_T5", "Trans_Bert"
           ];
 
           for(let cls of classes){
@@ -592,25 +501,7 @@ export function scatter(files_name,model){
     
         });
     });
-  
-
-
     // Append dots
-
-  let thresh_hold = 10; // Global variable to hold the threshold
-
-  // $(document).ready(function() {
-  //   initializeSlider(function(value) {
-  //     thresh_hold = parseInt(value, 10); // Update the global variable when the slider value changes
-  //
-  //   for(let cls of classes){
-  //       const start_all =extract_all_child_nodes_start("line1"+cls,thresh_hold,color_hues_for_blues);
-  //       const start_all1 =extract_all_child_nodes_start("line2"+cls,thresh_hold,color_hues_green_);
-  //       console.log('Thresh in document ready:', thresh_hold);
-  //   }
-  //
-  //   });
-  // });
   let xVar, yVar;
 
   if (model=="T5"){
@@ -618,12 +509,12 @@ export function scatter(files_name,model){
       yVar = "y_t5";
   }
   else if (model=="Bert"){
-      xVar = "x_gpt";
-      yVar = "y_gpt";
-  }
-  else if (model == "Gpt2"){
       xVar = "x_bert";
       yVar = "y_bert";
+  }
+  else if (model == "GPT2"){
+      xVar = "x_gpt";
+      yVar = "y_gpt";
   }
 
   data.forEach(d => {
@@ -634,10 +525,10 @@ export function scatter(files_name,model){
   //for force direct simulation
   let _strength = -3, distanceMax = 15;
 
-  if (model == "Gpt2"){
+  if (model == "Bert"){
           _strength  = -5;
   }
-  else if (model == "Bert"){
+  else if (model == "GPT2"){
       distanceMax = 20;
   }
   var force = d3.forceSimulation(data)
@@ -655,6 +546,7 @@ export function scatter(files_name,model){
       .attr("cx", d => x(d.x))
       .attr("cy", d => y(d.y))
       .attr("r", 7)
+      .attr("class",d=>'dot'+d.label)
       .style("fill",d=>{
           if (d.label==0){
               if(d.similarity_T5==0.0){
@@ -716,7 +608,7 @@ export function scatter(files_name,model){
       .selectAll()
       .data(data)
       .join('path')
-        .attr('d', 'M7,0 L15,0') // Simple arrow shape
+        .attr('d', 'M-7,0 L7,0') // Simple arrow shape
         //.attr('fill', 'none')
         .attr('stroke', "black")
         .attr('stroke-width', 2)
@@ -724,8 +616,9 @@ export function scatter(files_name,model){
             const arcCenterX = d.x;
             const arcCenterY = d.y;
             const [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-            const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
-            return `translate(${arrowX}, ${arrowY}) rotate(${angle + 90})`} // Position and rotate the arrow
+            //const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
+            const arrowX = arcCenterX,arrowY = arcCenterY
+            return `translate(${arrowX}, ${arrowY}) rotate(${angle})`} // Position and rotate the arrow
         );
 
 
@@ -738,9 +631,11 @@ export function scatter(files_name,model){
             const arcCenterY = d.y;
 
             const [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-            const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
+            //const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
 
-            return `translate(${arrowX}, ${arrowY}) rotate(${angle + 90})`}
+            const arrowX = arcCenterX,arrowY = arcCenterY;
+                return `translate(${arrowX}, ${arrowY}) rotate(${angle})`} // Position and rotate the arrow
+            //return `translate(${arrowX}, ${arrowY}) rotate(${angle + 90})`}
         );
   }
 
@@ -768,10 +663,7 @@ export function scatter(files_name,model){
   function updateDotsColorConsensus(svg, data) {
       svg.selectAll("circle")
           .data(data)
-
           .style("fill", d => {
-              //if (useConsensusForColor) {
-                  // Use color based on consensus_scores
                   const colorValue = colorScales[d.label] && colorScales[d.label][d.consensus_scores.toString()];
                   if (!colorValue) {
                       // Log consensus_scores if the corresponding color is undefined
@@ -779,10 +671,6 @@ export function scatter(files_name,model){
                       return "#000000";  // Fallback to a default color like black
                   }
                   return colorValue;
-              // } else {
-              //     // Fallback to the original color (medium brightness)
-              //     return colorScales[d.label]['1'];
-              // }
           });
   }
   })

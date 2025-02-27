@@ -12,13 +12,8 @@ const containerNames = []
 let clickedPos;
 
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId, align_sequences, accordion_table, ids_list, labels_list,model) {
-
-
-
-
-
-  // const gap = 10; 
-  const margins = { top: 40, right: 10, bottom: 0, left: 2 };
+    // Create the SVG element
+  const margins = { top: 5, right: 5, bottom: 10, left: 5 };
   const width = $('#accordion-wrapper').width() - margins.right - margins.left;
     const height = 100;
     const chartHeight = height / 2 - 20;
@@ -46,8 +41,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     let _xScale = xScale.copy();
 
   const chartGroups = [
-      svg.append("g").attr("transform", `translate(0, 0)`).attr("id", "line1"+model),
-      svg.append("g").attr("transform", `translate(0, ${height / 2})`).attr("id", "line2"+model)
+      svg.append("g").attr("transform", `translate(0,${margins.top})`).attr("id", "line1"+model),
+      svg.append("g").attr("transform", `translate(0, ${ margins.top + height / 2})`).attr("id", "line2"+model)
   ];
   chartGroups.forEach((group, i) => {
     group.append("g")
@@ -150,45 +145,11 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
               });
         });
 
-    // Brushing
-
-        //.on('brush end', () => {
-       // console.log("brush")
-       /* if (event.sourceEvent.type === 'zoom') {
-            return;
-        }
-        if (event.selection === null) {
-            selectionExtent = origExtent;
-            return renderBars();
-        }
-        // get x coordinates
-        const [x0, x1] = event.selection;
-        // convert to dates
-        const startDate = _xScale.invert(x0);
-        const endDate = _xScale.invert(x1);
-        selectionExtent = [startDate, endDate];
-        renderBars();*/
-  //  });
-
-
-
-
     svg.append("g")
         .attr("class", "brush_g")
-    //brush_group.call(brush);
 
-    const doc = d3.select(document);
-
-
-    // console.log("#"+container.id)
-    // d3.select("#"+container.id)
-    //     .attr("tabindex",0)
     svg.on('keydown', (event) => {
-        //console.log(event)
         if (event.key === "C" || event.key === "c") {
-            //console.log("ctl_brush")
-
-            //console.log(event)
 
             const brush = d3.brushX()
                 .on("end", ({selection}) =>{
@@ -198,13 +159,9 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
                     const startRange = _xScale.invert(x0);
                     const endRange = _xScale.invert(x1);
 
-
                     clickedPos = (selection[0] + selection[1] )/2.0;
                     createAccordion(align_sequences, 0, accordion_table,
                         [xScale(startRange),xScale(endRange)]   , " ", " ", ids_list, labels_list, 437)
-
-                 //   console.log(sourceEvent.type)
-                    console.log(selection)
                 });
 
             d3.select(event.srcElement).select(".brush_g").call(brush)
@@ -244,13 +201,13 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     else if(modelType=="BiLSTM_Bert"){
         all_data = await d3.csv("cas9_bert_lstm.csv");
       }
-    else if(modelType=="CNN_gpt2"){
+    else if(modelType=="CNN_GPT2"){
         all_data = await d3.csv("cas9_cnn_gpt2.csv");
       }
     else if(modelType=="CNN_Bert"){
         all_data = await d3.csv("cas9_bert_cnn.csv");
       }
-    else if(modelType=="Trans_Gpt2"){
+    else if(modelType=="Trans_GPT2"){
         all_data = await d3.csv("cas9_gpt2_only.csv");
       }
     else if(modelType=="Trans_T5"){
