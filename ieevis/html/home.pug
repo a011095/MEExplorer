@@ -61,11 +61,17 @@ html(lang="en")
           //#legend-wrapper1.ui.raised.segment
           //  section#legend-color1
           //  section#legend-labels1
-        #heat-vis.ui.container.fluid.raised.segment 
-          
-          select.ui.selection.dropdown#metric_type
-            option(value="f1") F1
-            option(value="accuracy") Accuracy
+        .ui.grid
+          .row
+            .eight.wide.column
+              #heat-vis.ui.container.fluid.raised.segment
+
+                select.ui.selection.dropdown#metric_type
+                  option(value="f1") F1
+                  option(value="accuracy") Accuracy
+            .eight.wide.column
+                #histogram-vis.ui.container.fluid.raised.segment
+
       
       .eight.wide.column
         #motif-container.ui.raised.segment

@@ -228,6 +228,36 @@ function updateDotsColor(svg, data, color_hue,color_hue_green) {
               })
 }
 
+function replaceModelReferences(d, cls,thresh) {
+    // Constants for old and new model names
+    const oldModel = "BiLSTM_GPT2";
+    const newModel = cls;
+
+    // Update properties dynamically
+    const prob = JSON.parse(d[`${newModel}_prob`]);
+    const lineElement = document.getElementById("model-wrapper").querySelector(`#line1${newModel}`);
+    const positionRanges = JSON.parse(d[`${newModel}_align_start_stop`]);
+    const alignedMotifs = d[`${newModel}_align_motifs`].replace(/^\[|]$/g, "").split(", ").map(item => item.replace(/^'|'$/g, ""));
+
+    let newAlignedMotifs = [];
+    let newProb = [];
+    let newPositionRanges = [];
+
+    for (let i = 0; i < alignedMotifs.length; i++) {
+        if (alignedMotifs[i] !== '') {
+            newAlignedMotifs.push(alignedMotifs[i]);
+            newProb.push(prob[i]);
+            newPositionRanges.push(positionRanges[i]);
+        }
+    }
+    //const sorted = sortBasedOnEndPosition(newPositionRanges, newAlignedMotifs, newProb, thresh);
+
+    // Create and place segments based on new model data
+    const data_form = formChartData(newAlignedMotifs, newProb, newPositionRanges);
+    // const cont = document.getElementById("viewer1"+cls);
+    addSegmentsToLine("line1"+cls, data_form,color_hues_for_blues)
+    // createAndPlaceSegments(sorted['sortedPoints'], 500, 2620, lineElement, color_hues_for_blues, sorted['sortedProbabilities'], sorted["sortedSequences"]);
+}
 
 function replaceModelReferences2(d, cls,thresh) {
   // Constants for old and new model names
@@ -262,15 +292,22 @@ function formChartData(seq, prob, pos) {
 
   // Loop through the arrays and form the data structure
   for (let i = 0; i < seq.length; i++) {
-      let item = {
-          start: pos[i][0],
-          end: pos[i][1],
-          keys: seq[i],
-          prob: prob[i]
-      };
-      data.push(item);
-  }
+      // let item = {
+      //     start: pos[i][0],
+      //     end: pos[i][1],
+      //     keys: seq[i],
+      //     prob: prob[i]
+      // };
+      for(let j=pos[i][0];j<pos[i][1];j++) {
+          let item={
+              ind:j,
+              keys:seq[i],
+              prob:prob[i]
+          }
+          data.push(item);
+      }
 
+  }
   return data;
 }
 
@@ -281,10 +318,18 @@ function addSegmentsToLine(svgId, dataObjects,color) {
   // svgContainer.selectAll("rect").remove();
   svgContainer.selectAll(`rect[id="${svgId+"rect"}"]`).remove();
 
+    const margins = { top: 5, right: 5, bottom: 10, left: 5 };
+    const width = $('#accordion-wrapper').width() - margins.right - margins.left;
+
+    const xScale = d3.scaleLinear()
+        .domain([0, 3065])
+        .range([margins.left, width - margins.right - 20]);
+
+
   // Constants for the SVG canvas
-  const totalWidthPx = 1000; // Assuming the width is always 1000 for simplicity
-  const totalRange = 3065; // Total range of positions
-  const scaleFactor = totalWidthPx / totalRange; // Scale factor for converting positions to pixel
+  //const totalWidthPx = 1000; // Assuming the width is always 1000 for simplicity
+  //const totalRange = 3065; // Total range of positions
+  //const scaleFactor = totalWidthPx / totalRange; // Scale factor for converting positions to pixel
   // const width = 1000; // Set a constant width
   const height = 30; // Use container's height or a fixed value if needed
   const marginTop = 40;
@@ -294,59 +339,39 @@ function addSegmentsToLine(svgId, dataObjects,color) {
   const barHeight = 40;  // Set the height of the bars to be constant at 20 units
 
   // Append each data object as a rectangle to the SVG
-  dataObjects.forEach(dataObject => {
-      const segmentStartPx = scaleFactor * dataObject.start;
-      const segmentWidthPx = scaleFactor * (dataObject.end - dataObject.start);
 
-      svgContainer.select("g")
-          .append("rect")
-          .attr("x", segmentStartPx+85)
-          .attr("id",svgId+"rect")
-          .attr("width", segmentWidthPx)
-          .attr("y", 1)  // Y position aligned with existing rects
-          .attr("height", 15)  // Same height as existing rects
-          .attr("fill", d => {
-            const index = Math.round(dataObject.prob * (color.length - 1));
+    //console.log(dataObjects)
+    //console.log(xScale(1)-xScale(0))
+    svgContainer.select("g")
+        .selectAll("rect")
+        .data(dataObjects)
+        .join("rect")
+        .attr("x", function(d){
+            console.log(xScale(d.ind));
+            return xScale(d.ind);
+        })
+        .attr("id",svgId+"rect")
+        .attr("width",xScale(1)-xScale(0)) //d=>{xScale(1)-xScale(0)})
+        .attr("y", 1)  // Y position aligned with existing rects
+        .attr("height", 15)  // Same height as existing rects
+        .attr("fill", d => {
+            const index = Math.round(d.prob * (color.length - 1));
             return color[index];
-          })
-          .on("click", function() {  // Add click event handler
-              alert(`Motif clicked: ${dataObject.keys}, Prob: ${dataObject.prob}`);
-          });
-      });
+        });
+        // .on("click", function() {  // Add click event handler
+        //     alert(`Motif clicked: ${dataObject.keys}, Prob: ${dataObject.prob}`);
+        // });
+//});
+
+  //dataObjects.forEach(dataObject => {
+      //const segmentStartPx = scaleFactor * dataObject.start;
+      //const segmentWidthPx = scaleFactor * (dataObject.end - dataObject.start);
+
+
      
 }
 
-function replaceModelReferences(d, cls,thresh) {
-  // Constants for old and new model names
-  const oldModel = "BiLSTM_GPT2";
-  const newModel = cls;
 
-  // Update properties dynamically
-  const prob = JSON.parse(d[`${newModel}_prob`]);
-  const lineElement = document.getElementById("model-wrapper").querySelector(`#line1${newModel}`);
-  const positionRanges = JSON.parse(d[`${newModel}_align_start_stop`]);
-  const alignedMotifs = d[`${newModel}_align_motifs`].replace(/^\[|]$/g, "").split(", ").map(item => item.replace(/^'|'$/g, ""));
-  let newAlignedMotifs = [];
-  let newProb = [];
-  let newPositionRanges = [];
-  for (let i = 0; i < alignedMotifs.length; i++) {
-    if (alignedMotifs[i] !== '') {
-        newAlignedMotifs.push(alignedMotifs[i]);
-        newProb.push(prob[i]);
-        newPositionRanges.push(positionRanges[i]);
-    }
-  }
-  const sorted = sortBasedOnEndPosition(newPositionRanges, newAlignedMotifs, newProb, thresh);
-
-  // Create and place segments based on new model data
-  console.log("line1"+cls);
-  const data_form = formChartData(newAlignedMotifs, newProb, newPositionRanges);
-  // const cont = document.getElementById("viewer1"+cls);
-
-  addSegmentsToLine("line1"+cls, data_form,color_hues_for_blues)
-
-  // createAndPlaceSegments(sorted['sortedPoints'], 500, 2620, lineElement, color_hues_for_blues, sorted['sortedProbabilities'], sorted["sortedSequences"]);
-}
 
 
 function filterRectanglesByRange(svgId, N) {
@@ -372,6 +397,145 @@ function filterRectanglesByRange(svgId, N) {
       }
   });
 }
+
+function drawHistogram(counts, domains, svg_container)
+{
+    const width = $(svg_container).width();
+    const height = $('#heat-vis').height();
+    const marginTop = 10;
+    const marginRight = 0;
+    const marginBottom = 40;
+    const marginLeft = 40;
+
+    // Declare the x (horizontal position) scale.
+
+
+    const x = d3.scaleBand()
+        .domain(domains)
+        .range([marginLeft, width - marginRight])
+        //.padding(0.1);
+
+    // Declare the y (vertical position) scale.
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(counts, (d) => d.count)])
+        .range([height - marginBottom, marginTop]);
+
+    console.log(counts,d3.max(counts, (d) => d.count))
+
+    // Create the SVG container.
+    const svg = d3.select(svg_container).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto;");
+
+    // Add a rect for each bar.
+    svg.append("g")
+        .attr("fill", "dimgray")
+        .selectAll()
+        .data(counts)
+        .join("rect")
+        .attr('class','histogram')
+        .attr("x", (d,i) => x(domains[i]))
+        .attr("y", (d) => y(d.count))
+        .attr("height", (d) => y(0) - y(d.count))
+        .attr("width", (d) => x(domains[1])-x(domains[0]))
+        .attr('stroke-width', 3)
+        .attr('stroke', 'white')
+        .on("mouseover", mouseover)
+        .on("mouseout", mouseout);
+    d3.select("#scatter-vis")
+
+
+    function mouseover(event, d) {
+
+        console.log(d);
+        d3.select("#scatter-vis")
+            .selectAll("circle")
+            .style('fill-opacity', function(){
+                const _angle = d3.select(this).attr('orientation');
+                if (_angle == d.angle)
+                    return 1.0;
+                else
+                    return 0.1;
+            })
+            .style('stroke-opacity', function(){
+                const _angle = d3.select(this).attr('orientation');
+                if (_angle == d.angle)
+                    return 1.0;
+                else
+                    return 0.1;
+            });
+
+
+        d3.select("#scatter-vis")
+            .selectAll("path")
+            .style('fill-opacity', function(){
+                const _angle = d3.select(this).attr('orientation');
+                if (_angle == d.angle)
+                    return 1.0;
+                else
+                    return 0.1;
+            })
+            .style('stroke-opacity', function(){
+                const _angle = d3.select(this).attr('orientation');
+                if (_angle == d.angle)
+                    return 1.0;
+                else
+                    return 0.1;
+            });
+
+        svg.selectAll('.histogram')
+            .style("fill", "dimgray");
+
+        d3.select(this)
+            .style("fill", "orange");
+    }
+
+    function mouseout(event, d) {
+        d3.select("#scatter-vis")
+            .selectAll("circle")
+            .style('fill-opacity', 1.0)
+            .style('stroke-opacity', 1.0);
+        d3.select("#scatter-vis")
+            .selectAll("path")
+            .style('fill-opacity',1.0)
+            .style('stroke-opacity', 1.0);
+
+        svg.selectAll('.histogram')
+            .style("fill", "dimgray");
+    }
+
+    // Add the x-axis and label.
+    svg.append("g")
+        .attr("transform", `translate(0,${height - marginBottom})`)
+        //.call(d3.axisBottom(x).tickSizeOuter(0));
+        .call(d3.axisBottom(x).tickSizeOuter(0))
+        .call((g) => g.append("text")
+            .attr("x", width/2 + 50)
+            .attr("y", marginBottom -2)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "end")
+            .attr('font-size', '12px')
+            .text("Sequence Length"));
+
+    // Add the y-axis and label, and remove the domain line.
+    svg.append("g")
+        .attr("transform", `translate(${marginLeft},0)`)
+        .call(d3.axisLeft(y).ticks(height / 40))
+        .call(g => g.select(".domain").remove())
+        .call(g => g.append("text")
+            .attr("x", -marginLeft)
+            .attr("y", marginTop)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "start")
+            .attr('font-size', '12px')
+            .text("Frequency"));
+
+    // Return the SVG element.
+    return svg.node();
+}
+
 
 export function scatter(files_name,model){
 
@@ -422,11 +586,16 @@ export function scatter(files_name,model){
     const q4 = sortedValues[sortedValues.length - 1]; // Max value, assuming sortedValues is not empty
     const [count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4]=calculateQ1Q2Q3Q4(sortedValues, q1,q2,q3,q4)
     const counts = [
-    { range: "0-Q1", count: count0toQ1, color: "blue" },
-    { range: "Q1-Q2", count: countQ1toQ2, color: "blue" },
-    { range: "Q2-Q3", count: countQ2toQ3, color: "blue" },
-    { range: "Q3-Q4", count: countQ3toQ4, color: "blue" }];
-    // drawHistogram(counts, "#hist-container")
+    { range: "0-Q1", count: count0toQ1, color: "blue", angle: 0},
+    { range: "Q1-Q2", count: countQ1toQ2, color: "blue",angle: 45},
+    { range: "Q2-Q3", count: countQ2toQ3, color: "blue",angle: 90},
+    { range: "Q3-Q4", count: countQ3toQ4, color: "blue",angle: 135}];
+    const q1_1 = parseInt(q1)+1, q2_1 = parseInt(q2)+1, q3_1 = parseInt(q3)+1, q4_1 = q4+1;
+
+    //draw histogram for sequence length
+    drawHistogram(counts, [0+'-'+q1+"(\u2500)",q1_1+'-'+q2+"(\u2572)",q2_1+'-'+q3+"(\u2572)",q3_1+'-'+q4+"(\u2571)"],"#histogram-vis");
+
+
     // Add X axis
     let x;
     if (model=="T5"){
@@ -546,6 +715,10 @@ export function scatter(files_name,model){
       .attr("cx", d => x(d.x))
       .attr("cy", d => y(d.y))
       .attr("r", 7)
+      .attr("orientation",function(d){
+          let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
+          return angle;
+      })
       .attr("class",d=>'dot'+d.label)
       .style("fill",d=>{
           if (d.label==0){
@@ -571,34 +744,62 @@ export function scatter(files_name,model){
       })
       .style("stroke", d => d3.rgb(color(d.label)).darker(0.5)) // Adds a darker rim
       .style("stroke-width", "2px") // Adjust the width of the rim
+      .on("moveout",function(event,d){
+
+          console.log(moveover)
+
+
+
+      })
       .on("click", function(event, d) {
-          console.log(d,event)
-          if(d) {
-              bClicked = true;
-              //highlight the selected circle
-              dots.style('fill-opacity', 0.3)
-              dots.style('stroke-opacity', 0.3)
-              d3.select(this).style('fill-opacity', 1.0)
-              d3.select(this).style('stroke-opacity', 1.0)
+          //console.log(d,event)
+          bClicked = !bClicked
+          //console.log(bClicked)
+          if(bClicked) {
+              if (d) {
+                  //bClicked = true;
+                  //highlight the selected circle
+                  dots.style('fill-opacity', 0.3)
+                  dots.style('stroke-opacity', 0.3)
+                  d3.select(this).style('fill-opacity', 1.0)
+                  d3.select(this).style('stroke-opacity', 1.0)
+                  console.log(d)
+                  //display motif candidates of the selected seq.
+                  if (d.label == 0) {
 
-              //display motif candidates of the selected seq.
-              if (d.label == 0) {
+                      for (let cls of classes) {
+                          try {
+                              replaceModelReferences(d, cls);
+                          } catch (error) {
+                              console.error(`Error processing model ${cls}:`, error);
+                          }
+                      }
+                  } else if (d.label == 1) {
 
-                  for (let cls of classes) {
-                      try {
-                          replaceModelReferences(d, cls);
-                      } catch (error) {
-                          console.error(`Error processing model ${cls}:`, error);
+                      for (let cls of classes) {
+                          try {
+                              replaceModelReferences2(d, cls);
+                          } catch (error) {
+                              console.error(`Error processing model ${cls}:`, error);
+                          }
                       }
                   }
-              } else if (d.label == 1) {
-                  for (let cls of classes) {
-                      try {
-                          replaceModelReferences2(d, cls);
-                      } catch (error) {
-                          console.error(`Error processing model ${cls}:`, error);
-                      }
-                  }
+              }
+          }
+          else{
+              dots.style('fill-opacity', 1.0)
+              dots.style('stroke-opacity', 1.0)
+
+              for (let cls of classes) {
+
+                  let svgId1 = "line1" + cls;
+                  let svgId2 = "line2" + cls;
+                  let svgContainer = d3.select(`#${svgId1}`);
+                  svgContainer.selectAll(`rect[id="${svgId1+"rect"}"]`).remove();
+
+                  svgContainer = d3.select(`#${svgId2}`);
+                  svgContainer.selectAll(`rect[id="${svgId2+"rect"}"]`).remove();
+
               }
           }
       })
@@ -609,6 +810,10 @@ export function scatter(files_name,model){
       .data(data)
       .join('path')
         .attr('d', 'M-7,0 L7,0') // Simple arrow shape
+          .attr("orientation",function(d){
+              let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
+              return angle;
+          })
         //.attr('fill', 'none')
         .attr('stroke', "black")
         .attr('stroke-width', 2)

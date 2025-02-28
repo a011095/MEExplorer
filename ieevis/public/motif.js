@@ -69,7 +69,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         .data(data1)
         .join("rect")
         .attr("y", chartHeight - margins.bottom - barHeight)
-        .attr("x", (d,i) => xScale(i))
+        .attr("x", (d) => xScale(d.ind))
         .attr("width", function(d){
           if(d.count > 0) {
               return xScale(1);
@@ -167,6 +167,11 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
             d3.select(event.srcElement).select(".brush_g").call(brush)
         }
     })
+
+    svg.call(zoom)
+        .transition()
+        .duration(500)
+        .call(zoom.scaleTo, 1);
 
     svg.on('keyup', (event) => {
         //console.log(event)
