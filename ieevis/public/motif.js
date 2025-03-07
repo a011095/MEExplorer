@@ -7,11 +7,14 @@ let seqLen = 3065
 
 const svgGlobal = {}
 const containerNames = []
+
+export let zoomScale = 1;
 //let brush;
 
 let clickedPos;
 
-function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId, align_sequences, accordion_table, ids_list, labels_list,model) {
+function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId,
+                         align_sequences, accordion_table, ids_list, labels_list,model,models) {
     // Create the SVG element
   const margins = { top: 5, right: 5, bottom: 10, left: 5 };
   const width = $('#accordion-wrapper').width() - margins.right - margins.left;
@@ -78,7 +81,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
               return 0;
         })
         .attr("height", barHeight)
-        .attr("fill", d => color1[Math.round((d.prob-minprob)/maxprob * (color1.length - 1))])
+        .attr("fill", d => color1((d.prob-minprob)/maxprob));
 
     maxprob = data2.reduce((max, obj) => obj.prob > max ? obj.prob : max, data2[0].prob);
     minprob = data2.reduce((min, obj) => obj.prob < min ? obj.prob : min, data2[0].prob);
@@ -97,7 +100,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         })
         .attr("y", chartHeight - margins.bottom - barHeight)
         .attr("height", barHeight)
-        .attr("fill", d=>color2[Math.round((d.prob-minprob)/maxprob  * (color2.length - 1))])
+        .attr("fill", d=>color2((d.prob-minprob)/maxprob));
+        //.attr("fill", d=>color2[Math.round((d.prob-minprob)/maxprob  * (color2.length - 1))])
         //.call(brush);
         // .on("click", function(event, d) {
         //     createAccordion(align_sequences, 0, accordion_table,
@@ -122,27 +126,41 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
             // Update the x scale
             _xScale = t.rescaleX(xScale);
 
+
             if (event.type === "brush") return;
             //console.log("test")
             const xz = event.transform.rescaleX(xScale);
-            svg.selectAll("rect")
-                .attr("x", d => xz(d.ind))
-                .attr("width",function(d){
-                    if(xz(d.ind)>margins.left)
-                        if(d.count > 0) {
-                            return Math.abs(xz(1) - xz(0));
-                        }
+            zoomScale = xz;
+
+            for(let _i of models){
+                let _svg = d3.select("#line" + _i);
+
+                _svg.selectAll("rect")
+                    .attr("x", d => xz(d.ind))
+                    .attr("width",function(d){
+                        if(xz(d.ind)>margins.left)
+                            if(d.count > 0) {
+                                return Math.abs(xz(1) - xz(0));
+                            }
+                            else
+                                return 0;
+                        //return xz(d.end) - xz(d.start);
                         else
                             return 0;
-                        //return xz(d.end) - xz(d.start);
-                    else
-                        return 0;
-                });
-
-            chartGroups.forEach(group => {
-                group.select("g")
+                    });
+                _svg.select("#line1"+_i).select(".x-axis")
                     .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
-              });
+
+                _svg.select("#line2"+_i).select(".x-axis")
+                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
+            }
+
+
+
+            // chartGroups.forEach(group => {
+            //     group.select("g")
+            //         .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
+            //   });
         });
 
     svg.append("g")
@@ -370,7 +388,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       viewer.append(viewer1);
 
         createDualChart(viewer1, datL0, color_hues_for_blues, "Pathogenic", datL1,
-            color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
+            color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i],motif)
 
       // createDualChart(viewer1, indexRangesProb, color_hues_for_blues, "Pathogenic", indexRangesProb1,
       // color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
