@@ -228,31 +228,31 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     const motif_data = await d3.json("https://raw.githubusercontent.com/vikash06131721/Data-host/main/group0.json");
     let all_data;
     if(modelType=="BiLSTM_T5"){
-        all_data = await d3.csv("cas9_bisltm_t5.csv");
+        all_data = await d3.csv("/dat/cas9_bisltm_t5.csv");
       }
     else if(modelType=="CNN_T5"){
-        all_data = await  d3.csv("cas9_cnn_t5.csv");
+        all_data = await  d3.csv("/dat/cas9_cnn_t5.csv");
       }
     else if(modelType=="BiLSTM_GPT2"){
-        all_data = await d3.csv("cas9_bilstm_gpt2.csv");
+        all_data = await d3.csv("/dat/cas9_bilstm_gpt2.csv");
       }
     else if(modelType=="BiLSTM_Bert"){
-        all_data = await d3.csv("cas9_bert_lstm.csv");
+        all_data = await d3.csv("/dat/cas9_bert_lstm.csv");
       }
     else if(modelType=="CNN_GPT2"){
-        all_data = await d3.csv("cas9_cnn_gpt2.csv");
+        all_data = await d3.csv("/dat/cas9_cnn_gpt2.csv");
       }
     else if(modelType=="CNN_Bert"){
-        all_data = await d3.csv("cas9_bert_cnn.csv");
+        all_data = await d3.csv("/dat/cas9_bert_cnn.csv");
       }
     else if(modelType=="Trans_GPT2"){
-        all_data = await d3.csv("cas9_gpt2_only.csv");
+        all_data = await d3.csv("/dat/cas9_gpt2_only.csv");
       }
     else if(modelType=="Trans_T5"){
-        all_data = await d3.csv("cas9_t5_only.csv");
+        all_data = await d3.csv("/dat/cas9_t5_only.csv");
       }
     else if(modelType=="Trans_Bert"){
-        all_data = await d3.csv("cas9_bert_only.csv");
+        all_data = await d3.csv("/dat/cas9_bert_only.csv");
       }
 
     let strings_l0=[]; //motif seq
@@ -382,7 +382,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     let labels;
 
     //for the sequence view
-    d3.csv("cas9_align_umap_with_gpt2_bert_t5.csv").then(function(data) {
+    d3.csv("/dat/cas9_align_umap_with_gpt2_bert_t5.csv").then(function(data) {
       const view_table_accordion_main = createHtmlViews("accordion_main","98%")
       acc.append(view_table_accordion_main)
       // acc.append(view_side_tabel)

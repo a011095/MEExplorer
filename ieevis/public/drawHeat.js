@@ -160,7 +160,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         svgElement.remove();
       }
 
-      await scatter("cas9all_new_All6.csv",d.Emb)
+      await scatter("/dat/cas9all_new_All6.csv",d.Emb)
 
       highlightTopRightViewer(d.Model, d.Emb);
       console.log(selected);
