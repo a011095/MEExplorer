@@ -197,24 +197,22 @@ function calculateQ1Q2Q3Q4(sorted_vals, q1,q2,q3,q4){
     let count0toQ1 = 0;
     let countQ1toQ2 = 0;
     let countQ2toQ3 = 0;
-    let countQ3toQ4 = 0,countQ4 = 0;
+    let countQ3toQ4 = 0
 
     // Count the values in each interval
     sorted_vals.forEach(value => {
-        if (value <= q1) {
+        if (value <= parseInt(q1)) {
+            //console.log(value);
             count0toQ1++;
-        } else if (value <= q2) {
+        } else if (value <= parseInt(q2)) {
             countQ1toQ2++;
-        } else if (value <= q3) {
+        } else if (value <= parseInt(q3)) {
             countQ2toQ3++;
-        } else if (value <= q4) {
+        } else if (value <= parseInt(q4)) {
             countQ3toQ4++;
         }
-        else{
-            countQ4++;
-        }
     });
-    return [count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4,countQ4]
+    return [count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4]
   }
 
 
@@ -223,13 +221,11 @@ function findQuartileRange(point, q1, q2, q3, q4) {
     if (point <= q1) {
       return [0,0]; //40
     } else if (point <= q2) {
-      return [1/4.0*radius,45]; //100
+      return [1/3.0*radius,45]; //100
     } else if (point <= q3) {
-      return [2/4.0*radius,90]; //150
+      return [2/3.0*radius,90]; //150
     } else if (point <= q4) {
-      return [3/4.0*radius,135]; //310
-    } else {
-      return [4/4.0*radius,180]; // For points greater than q4
+        return [3 / 3.0 * radius, 135]; //310
     }
   }
 
@@ -259,56 +255,71 @@ function updateDotsColor(svg, data, color_hue,color_hue_green) {
               })
 }
 
+          function getAlignedModelData(d, modelName) {
+            const prob = JSON.parse(d[`${modelName}_prob`] || '[]');
+            const positionRanges = JSON.parse(d[`${modelName}_align_start_stop`] || '[]');
+            const rawMotifs = d[`${modelName}_align_motifs`] || '[]';
+            const alignedMotifs = rawMotifs
+              .replace(/^\[|]$/g, "")
+              .split(", ")
+              .map(item => item.replace(/^'|'$/g, ""));
+
+            const maxLength = Math.min(alignedMotifs.length, prob.length, positionRanges.length);
+            const normalizedMotifs = [];
+            const normalizedProb = [];
+            const normalizedRanges = [];
+
+            for (let i = 0; i < maxLength; i++) {
+              const motif = alignedMotifs[i];
+              const probability = Number(prob[i]);
+              const range = positionRanges[i];
+
+              if (!motif || !motif.trim()) {
+                continue;
+              }
+
+              if (!Array.isArray(range) || range.length < 2) {
+                continue;
+              }
+
+              const start = Number(range[0]);
+              const end = Number(range[1]);
+
+              if (!Number.isFinite(probability) || !Number.isFinite(start) || !Number.isFinite(end)) {
+                continue;
+              }
+
+              if (end <= start) {
+                continue;
+              }
+
+              normalizedMotifs.push(motif);
+              normalizedProb.push(probability);
+              normalizedRanges.push([start, end]);
+            }
+
+            return {
+              motifs: normalizedMotifs,
+              probabilities: normalizedProb,
+              ranges: normalizedRanges
+            };
+          }
+
 function replaceModelReferences(d, cls,thresh) {
-    // Constants for old and new model names
-    const oldModel = "BiLSTM_GPT2";
-    const newModel = cls;
-
-    // Update properties dynamically
-    const prob = JSON.parse(d[`${newModel}_prob`]);
-    const lineElement = document.getElementById("model-wrapper").querySelector(`#line1${newModel}`);
-    const positionRanges = JSON.parse(d[`${newModel}_align_start_stop`]);
-    const alignedMotifs = d[`${newModel}_align_motifs`].replace(/^\[|]$/g, "").split(", ").map(item => item.replace(/^'|'$/g, ""));
-
-    let newAlignedMotifs = [];
-    let newProb = [];
-    let newPositionRanges = [];
-
-    for (let i = 0; i < alignedMotifs.length; i++) {
-        if (alignedMotifs[i] !== '') {
-            newAlignedMotifs.push(alignedMotifs[i]);
-            newProb.push(prob[i]);
-            newPositionRanges.push(positionRanges[i]);
-        }
-    }
-    //const sorted = sortBasedOnEndPosition(newPositionRanges, newAlignedMotifs, newProb, thresh);
+            const newModel = cls;
+            const { motifs, probabilities, ranges } = getAlignedModelData(d, newModel);
 
     // Create and place segments based on new model data
-    const data_form = formChartData(newAlignedMotifs, newProb, newPositionRanges);
-    // const cont = document.getElementById("viewer1"+cls);
+            const data_form = formChartData(motifs, probabilities, ranges);
     addSegmentsToLine("line1"+cls, data_form,color_hues_for_blues)
-    // createAndPlaceSegments(sorted['sortedPoints'], 500, 2620, lineElement, color_hues_for_blues, sorted['sortedProbabilities'], sorted["sortedSequences"]);
 }
 
 function replaceModelReferences2(d, cls,thresh) {
-  // Constants for old and new model names
-  const oldModel = "BiLSTM_GPT2";
   const newModel = cls;
-
-  // Update properties dynamically
-  const prob = JSON.parse(d[`${newModel}_prob`]);
-  const lineElement = document.getElementById("model-wrapper").querySelector(`#line2${newModel}`);
-  const positionRanges = JSON.parse(d[`${newModel}_align_start_stop`]);
-  const alignedMotifs = d[`${newModel}_align_motifs`].replace(/^\[|]$/g, "").split(", ").map(item => item.replace(/^'|'$/g, ""));
-
-  const sorted = sortBasedOnEndPosition(positionRanges, alignedMotifs, prob, thresh);
-  const data_form = formChartData(alignedMotifs, prob, positionRanges);
+            const { motifs, probabilities, ranges } = getAlignedModelData(d, newModel);
+            const data_form = formChartData(motifs, probabilities, ranges);
 
   addSegmentsToLine("line2"+cls, data_form,color_hues_green_)
-
-
-  // Create and place segments based on new model data
-  // createAndPlaceSegments(sorted['sortedPoints'], 500, 2620, lineElement, color_hues_green_, sorted['sortedProbabilities'], sorted["sortedSequences"]);
 }
 
 function formChartData(seq, prob, pos) {
@@ -348,7 +359,11 @@ function formChartData(seq, prob, pos) {
 
 
 function addSegmentsToLine(svgId, dataObjects,color) {
-  // Get the SVG container by ID
+
+
+
+
+    // Get the SVG container by ID
   const svgContainer = d3.select(`#${svgId}`);
   console.log(`#${svgId}`)
   // svgContainer.selectAll("rect").remove();
@@ -357,9 +372,6 @@ function addSegmentsToLine(svgId, dataObjects,color) {
     const margins = { top: 5, right: 5, bottom: 10, left: 5 };
     const width = $('#accordion-wrapper').width() - margins.right - margins.left;
 
-    // const xScale = d3.scaleLinear()
-    //     .domain([0, 3065])
-    //     .range([margins.left, width - margins.right - 20]);
     const xScale = zoomScale;
 
   const marginTop = 40;
@@ -369,15 +381,11 @@ function addSegmentsToLine(svgId, dataObjects,color) {
   const barHeight = 40;  // Set the height of the bars to be constant at 20 units
 
   // Append each data object as a rectangle to the SVG
-
-    //console.log(dataObjects)
-    //console.log(xScale(1)-xScale(0))
     svgContainer.select("g")
         .selectAll("rect")
         .data(dataObjects)
         .join("rect")
         .attr("x", function(d){
-            //console.log(xScale(d.ind));
             return xScale(d.ind);
         })
         .attr("id",svgId+"rect")
@@ -385,21 +393,10 @@ function addSegmentsToLine(svgId, dataObjects,color) {
         .attr("y", 1)  // Y position aligned with existing rects
         .attr("height", 15)  // Same height as existing rects
         .attr("fill", d => {
-            //const index = Math.round(d.prob * (color.length - 1));
-            //console.log(color(d.prob))
             return color(d.prob/d.max_prob);//color(d.prob);
         });
-        // .on("click", function() {  // Add click event handler
-        //     alert(`Motif clicked: ${dataObject.keys}, Prob: ${dataObject.prob}`);
-        // });
-//});
-
-  //dataObjects.forEach(dataObject => {
-      //const segmentStartPx = scaleFactor * dataObject.start;
-      //const segmentWidthPx = scaleFactor * (dataObject.end - dataObject.start);
 
 
-     
 }
 
 
@@ -453,6 +450,7 @@ function drawHistogram(counts, domains, svg_container)
 
     console.log(counts,d3.max(counts, (d) => d.count))
 
+    d3.select(svg_container).selectAll("svg").remove();
     // Create the SVG container.
     const svg = d3.select(svg_container).append("svg")
         .attr("width", width)
@@ -591,6 +589,7 @@ export function scatter(files_name,model){
 
   }
 
+  d3.select("#scatter-vis").selectAll("svg").remove();
   // append the svg object to the body of the page
   const svg = d3.select("#scatter-vis")
   .append("svg")
@@ -611,26 +610,35 @@ export function scatter(files_name,model){
     const min_len = math.min(data.map((d)=>d.len))
     const sortedValues = math.sort(data.map(d => d.len))
 
+    console.log("sequence lenght=",min_len,max_len);
 
     // Quartile calculations using math.js
-    const q1 = math.quantileSeq(sortedValues, 0.25);
-    const q2 = math.quantileSeq(sortedValues, 0.5); // Median
-    const q3 = math.quantileSeq(sortedValues, 0.75);
-    const q4 = sortedValues[sortedValues.length - 1]; // Max value, assuming sortedValues is not empty
-    const [count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4,countQ4]=calculateQ1Q2Q3Q4(sortedValues, q1,q2,q3,q4)
+    //const q1 = math.quantileSeq(sortedValues, 0.25);
+    //const q2 = math.quantileSeq(sortedValues, 0.5); // Median
+    //const q3 = math.quantileSeq(sortedValues, 0.75);
+
+      const q1 = 1000, q2 = 1300, q3 = 1380;
+
+    //const q4 = sortedValues[sortedValues.length - 1]; // Max value, assuming sortedValues is not empty
+
+      const q4 = max_len;
+      const [count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4]=calculateQ1Q2Q3Q4(sortedValues, q1,q2,q3,q4)
+
+    console.log(q1,q2,q3,q4);
+    //console.log(sortedValues);
+    console.log(count0toQ1,countQ1toQ2,countQ2toQ3,countQ3toQ4)
    //   const _test = count0toQ1 + countQ1toQ2 + countQ2toQ3 + countQ3toQ4;
     const counts = [
     { range: "0-Q1", count: count0toQ1, color: "blue", angle: 0},
     { range: "Q1-Q2", count: countQ1toQ2, color: "blue",angle: 45},
     { range: "Q2-Q3", count: countQ2toQ3, color: "blue",angle: 90},
-    { range: "Q3-Q4", count: countQ3toQ4, color: "blue",angle: 135},
-        { range: "Q4", count: countQ4, color: "blue",angle: 180}
+    { range: "Q3-Q4", count: countQ3toQ4, color: "blue",angle: 135}
     ];
     const q1_1 = parseInt(q1)+1,  q2_1 = parseInt(q2)+1, q3_1 = parseInt(q3)+1, q4_1 = parseInt(q4)+1;
 
     //draw histogram for sequence length
     //drawHistogram(counts, [0+'-'+q1+"(\u2500)",q1_1+'-'+q2+"(\u2572)",q2_1+'-'+q3+"(\u2572)",q3_1+'-'+q4+"(\u2571)"],"#histogram-vis");
-      drawHistogram(counts, [0+'-'+q1,q1_1+'-'+q2,q2_1+'-'+q3,q3_1+'-'+q4,q4_1+'<'],"#histogram-vis");
+      drawHistogram(counts, [min_len+'-'+q1,q1_1+'-'+q2,q2_1+'-'+q3,q3_1+'-'+q4],"#histogram-vis");
 
 
       // Add X axis
@@ -740,6 +748,140 @@ export function scatter(files_name,model){
 
 
   let bClicked = false;
+  let selectedDatum = null;
+  let lenDots = null;
+  let currentColorMode = 'similarity';
+
+  const annotationLayer = svg.append('g')
+    .attr('class', 'selected-annotation-layer')
+    .style('pointer-events', 'none');
+
+  function formatAnnotationValue(value, digits = 3) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue.toFixed(digits) : 'N/A';
+  }
+
+  function getAnnotationLines(dat) {
+    const labelName = Number(dat.label) === 0 ? 'Pathogenic' : 'Non-Pathogenic';
+    return [
+      `${dat.ID ?? 'Unknown'}`,
+      `Class: ${labelName}`,
+      `Length: ${dat.len ?? 'N/A'}`,
+      `Similarity: ${formatAnnotationValue(dat.similarity_T5)}`
+    ];
+  }
+
+  function clearSelectedAnnotation() {
+    annotationLayer.selectAll('*').remove();
+  }
+
+  function drawSelectedAnnotation(dat) {
+    clearSelectedAnnotation();
+
+    if (!dat) {
+      return;
+    }
+
+    const lines = getAnnotationLines(dat);
+    const textGroup = annotationLayer.append('g')
+      .attr('class', 'selected-dot-annotation');
+
+    const text = textGroup.append('text')
+      .attr('font-size', 12)
+      .attr('font-family', 'sans-serif')
+      .attr('font-weight', 600)
+      .attr('fill', '#1f2937');
+
+    lines.forEach((line, index) => {
+      text.append('tspan')
+        .attr('x', 0)
+        .attr('dy', index === 0 ? 0 : 15)
+        .text(line);
+    });
+
+    const textBox = text.node().getBBox();
+    const paddingX = 8;
+    const paddingY = 6;
+    const annotationWidth = textBox.width + paddingX * 2;
+    const annotationHeight = textBox.height + paddingY * 2;
+    const xOffset = 14;
+    const yOffset = 14;
+
+    let annotationX = dat.x + xOffset;
+    let annotationY = dat.y - annotationHeight - yOffset;
+
+    annotationX = Math.max(6, Math.min(width - annotationWidth - 6, annotationX));
+    annotationY = Math.max(6, Math.min(height - annotationHeight - 6, annotationY));
+
+    textGroup.attr('transform', `translate(${annotationX}, ${annotationY})`);
+    text.attr('transform', `translate(${paddingX}, ${paddingY + 11})`);
+
+    textGroup.insert('rect', 'text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', annotationWidth)
+      .attr('height', annotationHeight)
+      .attr('rx', 6)
+      .attr('ry', 6)
+      .attr('fill', 'white')
+      .attr('fill-opacity', 0.92)
+      .attr('stroke', '#4b5563')
+      .attr('stroke-width', 1);
+
+    annotationLayer.insert('line', ':first-child')
+      .attr('class', 'selected-dot-annotation-line')
+      .attr('x1', dat.x)
+      .attr('y1', dat.y)
+      .attr('x2', annotationX)
+      .attr('y2', annotationY + annotationHeight / 2)
+      .attr('stroke', '#4b5563')
+      .attr('stroke-width', 1.25);
+  }
+
+  function resetDotHighlight() {
+    dots.style('fill-opacity', 1.0)
+      .style('stroke-opacity', 1.0);
+
+    if (lenDots) {
+      lenDots.style('fill-opacity', 1.0)
+        .style('stroke-opacity', 1.0);
+    }
+  }
+
+    function updateModeButtons(mode) {
+      currentColorMode = mode;
+
+      $('#sim_button').toggleClass('active', mode === 'similarity');
+      $('#consensus_button').toggleClass('active', mode === 'consensus');
+    }
+
+    function setSequenceHighlight(selectedID, highlightColor) {
+      const sequenceRoot = $('#' + selectedID);
+
+      if (!sequenceRoot.length) {
+        return;
+      }
+
+      sequenceRoot.find('span[data-scatter-highlight="true"]').each(function() {
+        const parent = this.parentNode;
+
+        while (this.firstChild) {
+          parent.insertBefore(this.firstChild, this);
+        }
+
+        parent.removeChild(this);
+      });
+
+      if (!highlightColor) {
+        return;
+      }
+
+      sequenceRoot.find('*').contents().filter(function() {
+        return this.nodeType === Node.TEXT_NODE && this.textContent.trim().length > 0;
+      }).each(function() {
+        $(this).wrap(`<span data-scatter-highlight="true" style="background-color: ${highlightColor};"></span>`);
+      });
+    }
 
   const dots = svg.append('g')
     .selectAll("dot")
@@ -763,122 +905,109 @@ export function scatter(files_name,model){
       })
       //.style("stroke", d => d3.rgb(color(d.label)).darker(0.5)) // Adds a darker rim
       //.style("stroke-width", "2px") // Adjust the width of the rim
-      .on("moveout",function(event,d){
-
-          console.log(moveover)
-
-
-
-      })
-      .on("click", function(event, dat){
-          //console.log(d,event)
-          bClicked = !bClicked
-          //console.log(d,_index)
-          //console.log(bClicked)
-          if(bClicked) {
-              if (dat) {
-                  //bClicked = true;
-                  //highlight the selected circle
-                  dots.style('fill-opacity', 0.3)
-                  dots.style('stroke-opacity', 0.3)
-                  lenDots.style('fill-opacity', 0.3)
-                  lenDots.style('stroke-opacity', 0.3)
-                  lenDots.style('fill-opacity', (d,i)=>{
-                      //console.log(i,d.index, i==d.index)
-                      return i==dat.index?1.0:0.3;})
-                  d3.select(this).style('fill-opacity', 1.0)
-                  d3.select(this).style('stroke-opacity', 1.0)
-                  //console.log(d)
-                  //display motif candidates of the selected seq.
-                  if (dat.label == 0) {
-
-                      for (let cls of classes) {
-                          try {
-                              replaceModelReferences(dat, cls);
-                          } catch (error) {
-                              console.error(`Error processing model ${cls}:`, error);
-                          }
-                      }
-                  } else if (dat.label == 1) {
-
-                      for (let cls of classes) {
-                          try {
-                              replaceModelReferences2(dat, cls);
-                          } catch (error) {
-                              console.error(`Error processing model ${cls}:`, error);
-                          }
-                      }
-                  }
-              }
-          }
-          else{
-              dots.style('fill-opacity', 1.0)
-              dots.style('stroke-opacity', 1.0)
-              lenDots.style('fill-opacity', 1.0)
-              lenDots.style('stroke-opacity', 1.0)
-
-              for (let cls of classes) {
-
-                  let svgId1 = "line1" + cls;
-                  let svgId2 = "line2" + cls;
-                  let svgContainer = d3.select(`#${svgId1}`);
-                  svgContainer.selectAll(`rect[id="${svgId1+"rect"}"]`).remove();
-
-                  svgContainer = d3.select(`#${svgId2}`);
-                  svgContainer.selectAll(`rect[id="${svgId2+"rect"}"]`).remove();
-
-              }
-          }
-      })
-
-  //depict the length of protein sequences.
-  let lenDots = svg.append('g')
-      .selectAll()
-      .data(data)
-      .join("circle")
-      .attr("class",d=>'len_dot'+d.label)
-      .attr("cx", d => x(d.x))
-      .attr("cy", d => y(d.y))
-      .attr("r", d=>{
-          const [size, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-          //console.log(d.len,size)
-          return size;
-      })
-      // .attr("orientation",function(d){
-      //     let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-      //     return angle;
+      // .on("moveout",function(event,d){
+      //     console.log(moveover)
       // })
-      .attr("orientation",function(d){
-                  let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-                  return angle;
-              })
-      //.attr("class",d=>'dot'+d.label)
-      .style("fill", 'gray');
-          // if (d.label==0){
-          //     return color_hues_for_blues(d.similarity_T5);
-          // }
-          // else if(d.label==1){
-          //     return color_hues_green_(d.similarity_T5);
-          // }
-      //})
-      // .join('path')
-      //   .attr('d', 'M-7,0 L7,0') // Simple arrow shape
-      //     .attr("orientation",function(d){
-      //         let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-      //         return angle;
-      //     })
-      //   //.attr('fill', 'none')
-      //   .attr('stroke', "black")
-      //   .attr('stroke-width', 2)
-      //   .attr('transform',d=>{
-      //       const arcCenterX = d.x;
-      //       const arcCenterY = d.y;
-      //       const [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-      //       //const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
-      //       const arrowX = arcCenterX,arrowY = arcCenterY
-      //       return `translate(${arrowX}, ${arrowY}) rotate(${angle})`} // Position and rotate the arrow
-      //   );
+        .on("click", function(event, dat){
+          const isSameDot = selectedDatum && selectedDatum.ID === dat.ID;
 
+          if (isSameDot) {
+            bClicked = false;
+              setSequenceHighlight(dat.ID.split('.')[0], null);
+            selectedDatum = null;
+            resetDotHighlight();
+            clearSelectedAnnotation();
+
+            for (let cls of classes) {
+              let svgId1 = "line1" + cls;
+              let svgId2 = "line2" + cls;
+              let svgContainer = d3.select(`#${svgId1}`);
+              svgContainer.selectAll(`rect[id="${svgId1+"rect"}"]`).remove();
+
+              svgContainer = d3.select(`#${svgId2}`);
+              svgContainer.selectAll(`rect[id="${svgId2+"rect"}"]`).remove();
+            }
+
+            return;
+          }
+
+          const previousSelectedDatum = selectedDatum;
+          bClicked = true;
+          selectedDatum = dat;
+
+          if (dat) {
+            let selectedID = dat.ID.split('.')[0];
+            const selectedElement = $('#' + selectedID)[0];
+
+        if (previousSelectedDatum && previousSelectedDatum.ID !== dat.ID) {
+          setSequenceHighlight(previousSelectedDatum.ID.split('.')[0], null);
+        }
+
+            if (selectedElement) {
+          setSequenceHighlight(selectedID, 'orange');
+
+              const posId = selectedElement.pos;
+              $('#accordion-wrapper').scrollTop(posId * 23);
+            }
+
+            dots.style('fill-opacity', 0.3)
+              .style('stroke-opacity', 0.3);
+
+            if (lenDots) {
+              lenDots.style('fill-opacity', 0.3)
+                .style('stroke-opacity', 0.3);
+            }
+
+            d3.select(this)
+              .style('fill-opacity', 1.0)
+              .style('stroke-opacity', 1.0);
+
+            drawSelectedAnnotation(dat);
+
+            if (dat.label == 0) {
+              for (let cls of classes) {
+                try {
+                  replaceModelReferences(dat, cls);
+                } catch (error) {
+                  console.error(`Error processing model ${cls}:`, error);
+                }
+              }
+            } else if (dat.label == 1) {
+              for (let cls of classes) {
+                try {
+                  replaceModelReferences2(dat, cls);
+                } catch (error) {
+                  console.error(`Error processing model ${cls}:`, error);
+                }
+              }
+            }
+          }
+        })
+
+  //depict the length of protein sequences (inner circles for sequence lengths).
+//   let lenDots = svg.append('g')
+//       .selectAll()
+//       .data(data)
+//       .join("circle")
+//       .attr("class",d=>'len_dot'+d.label)
+//       .attr("cx", d => x(d.x))
+//       .attr("cy", d => y(d.y))
+//       .attr("r", d=>{
+//           const [size, angle] = findQuartileRange(parseInt(d.len), q1, q2, q3, q4);
+//           //console.log(d.len,size)
+//           return size;
+//       })
+//       // .attr("orientation",function(d){
+//       //     let [color, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
+//       //     return angle;
+//       // })
+//       .attr("orientation",function(d){
+//                   let [color, angle] = findQuartileRange(parseInt(d.len), q1, q2, q3, q4);
+//                   return angle;
+//               })
+//       //.attr("class",d=>'dot'+d.label)
+//       .style("fill", 'gray');
+     
       var force = d3.forceSimulation(data)
           .force("charge", d3.forceManyBody().strength(_strength).distanceMax(distanceMax))
           //.force("charge", d3.forceManyBody().strength(-3).distanceMax(4))
@@ -889,19 +1018,11 @@ export function scatter(files_name,model){
   function tick() {
         dots.attr("cx", d => d.x)
             .attr("cy", d => d.y);
-      lenDots.attr("cx", d => d.x)
-          .attr("cy", d => d.y);
-        // lines.attr('transform',d=>{
-        //     const arcCenterX = d.x;
-        //     const arcCenterY = d.y;
-        //
-        //     const [size, angle] = findQuartileRange(d.len, q1, q2, q3, q4);
-        //     //const [arrowX, arrowY] = calculatePositionOnArc(arcCenterX, arcCenterY, radius, angle);
-        //
-        //     const arrowX = arcCenterX,arrowY = arcCenterY;
-        //         return `translate(${arrowX}, ${arrowY}) rotate(${angle})`} // Position and rotate the arrow
-        //     //return `translate(${arrowX}, ${arrowY}) rotate(${angle + 90})`}
-        // );
+      if (selectedDatum) {
+        drawSelectedAnnotation(selectedDatum);
+      }
+    //   lenDots.attr("cx", d => d.x)
+    //       .attr("cy", d => d.y);
   }
 
     // Append circles around dots instead of using an arc generator
@@ -915,9 +1036,11 @@ export function scatter(files_name,model){
      // console.log(colorArrayPath);
     createColorLegendBar('legend-color', colorArrayPath,[0,0.15,0.3]); //color_hues_for_blues);
     createColorLegendBar('legend-color1',colorArrayNonPath,[0,0.15,0.3]);//color_hues_green_);
+      updateModeButtons('similarity');
 
     $('#sim_button').click(function(){
         console.log('similarity_button');
+        updateModeButtons('similarity');
         updateDotsColor(svg, data, color_hues_for_blues,color_hues_green_);
 
         const colorArrayPath = Array.from({ length: 101 }, (_, index) => color_hues_for_blues(index/100.0));
@@ -930,6 +1053,7 @@ export function scatter(files_name,model){
 
     $('#consensus_button').click(function(){
             console.log('consensus_button');
+      updateModeButtons('consensus');
             updateDotsColorConsensus(svg, data);
 
         const colorArrayPath = Array.from({ length: 4 }, (_, index) => color_hues_for_blues(index/3.0));

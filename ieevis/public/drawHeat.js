@@ -33,9 +33,13 @@ export function heatmapN(vis, headline, metric, agg_data,myColor) {
 
 export async function heatmap(file_name,vis,headline,metric,agg_data){
   const selected=[];
+  let pendingViewerSelection = null;
+  let modelViewerReadyListenerRegistered = false;
   const margin = {top: 10, right: 100, bottom: 100, left: 50},
     width = document.getElementById(vis).getBoundingClientRect().width - margin.left - margin.right,
     height = document.getElementById(vis).getBoundingClientRect().height - margin.top - margin.bottom;
+
+  d3.select("#" + vis).selectAll("svg").remove();
 
 
   const svg = d3.select("#"+vis)
@@ -47,6 +51,34 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
 
   //Read the data
   d3.csv(file_name).then(function(data) {
+
+    const highlightTopRightViewer = function(model, emb) {
+      pendingViewerSelection = { model, emb };
+      const selectedDiv = '#viewer1' + model + '_' + emb;
+
+      d3.selectAll('.motif-viewer1').style('border', 'none');
+
+      if ($(selectedDiv).length === 0) {
+        return false;
+      }
+
+      $(selectedDiv).css({
+        'border': '4px solid #4daf4a',
+        'border-radius': '10px'
+      });
+
+      return true;
+    };
+
+    if (!modelViewerReadyListenerRegistered) {
+      document.addEventListener('modelViewerDone', function() {
+        if (pendingViewerSelection) {
+          highlightTopRightViewer(pendingViewerSelection.model, pendingViewerSelection.emb);
+        }
+      }, { once: true });
+
+      modelViewerReadyListenerRegistered = true;
+    }
 
     // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
     const myGroups = Array.from(new Set(data.map(d => d.Model)))
@@ -103,8 +135,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("opacity", 1)
     }
 
-    const click = async function(event, d) {
-      // Hide any existing tooltips before showing the new one
+    const applySelection = async function(cellSelection, d) {
       selected.length=0;
       const tooltip = d3.select("#hover");
       tooltip.html("");
@@ -112,46 +143,39 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       tooltip
         .html( d.Model + ", " + d.Emb +" selected")
         .style("opacity", 1)
-        
-      // Highlight the clicked cell
-      d3.selectAll("rect")
-        .style("stroke", "none")
-        .style("opacity", 0.8); // Reset other cells to default state
 
-      d3.select(this)
+      svg.selectAll(".heatmap-cell")
+        .style("stroke", "none")
+        .style("opacity", 0.8);
+
+      cellSelection
           .style("stroke", "black")
-          .style("opacity", 1)
+          .style("opacity", 1);
 
       selected.push([d.Model, d.Emb]);
 
-
       const scatterVis = document.querySelector("#scatter-vis");
-      let svgElement = scatterVis.querySelector("svg");
-      svgElement.remove();
-      svgElement = null;
+      const svgElement = scatterVis ? scatterVis.querySelector("svg") : null;
+      if (svgElement) {
+        svgElement.remove();
+      }
 
-      // await scatter("cas9all_new_All2.csv",d.Emb)
       await scatter("cas9all_new_All6.csv",d.Emb)
-      const color = d3.scaleOrdinal()
-        .domain(['0', '1'])
-        .range([ "#9ecae1", "#f44336"])
-        // console.log("selected",selected);
 
-      const selectedDiv = '#viewer1'+ d.Model +'_' +d.Emb;
-      console.log(selectedDiv);
-      d3.selectAll('.motif-viewer1').style('border', 'none');
-      $(selectedDiv).css({
-        'border': '4px solid #4daf4a', // Adds a solid black border
-        'border-radius': '10px'
-      });
+      highlightTopRightViewer(d.Model, d.Emb);
       console.log(selected);
+  }
+
+    const click = async function(event, d) {
+      await applySelection(d3.select(this), d);
   }
 
     // add the squares
     const dicts = agg[metric];
-    svg.selectAll()
+    const cells = svg.selectAll()
       .data(data, function(d) {return d.Model+':'+d.Emb;})
       .join("rect")
+        .attr("class", "heatmap-cell")
         .attr("x", function(d) { return x(d.Model) })
         .attr("y", function(d) { return y(d.Emb) })
         .attr("rx", 4)
@@ -171,8 +195,17 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("stroke-width", 4)
         .style("stroke", "none")
         .style("opacity", 0.8)
+          .style("cursor", "pointer")
         .on("mouseover", mouseover)
         .on("click",click)
+
+    const defaultDatum = data.find(d => d.Model === "BiLSTM" && d.Emb === "T5") || data[0];
+    if (defaultDatum) {
+      const defaultCell = cells.filter(cell => cell.Model === defaultDatum.Model && cell.Emb === defaultDatum.Emb);
+      if (!defaultCell.empty()) {
+        applySelection(defaultCell, defaultDatum);
+      }
+    }
   })
 
   // Add title to graph
@@ -205,7 +238,8 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     .attr("height", 200) // Adjust as needed
     .style("position", "absolute")
     .style("bottom", "30px") // Positioning at the bottom
-    .style("left", String(width+10)+"px");
+    .style("left", String(width+10)+"px")
+    .style("pointer-events", "none");
   const gLegend = svgLegend.append("g")
     // Translate to the center of the area where you want to rotate
     .attr("transform", "translate(100, 25) rotate(90) ");

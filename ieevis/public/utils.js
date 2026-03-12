@@ -1,7 +1,6 @@
 import { loadData } from './read_csv.js';
 import { heatmap } from './drawHeat.js';
 import { heatmapN } from './drawHeat.js';
-import { scatter } from './scatter_d3.js';
 
 // import { setupButtonListeners } from './drawHeat.js';
 import { modelViewer } from './motif.js';
@@ -28,7 +27,7 @@ async function aggregateDataFromCSVs(dict) {
   return aggregatedData;
 }
 
-
+//for model comparison view
 async function renderChart(data_val,agg_data){
 
   const cols = d3.scaleSequential()
@@ -54,10 +53,7 @@ async function renderChart(data_val,agg_data){
     else{
       console.log("not needed");
     }
-} 
-  // heatmap("files.csv","#f1-box")
-
-  
+  }
 }
 
 
@@ -71,7 +67,6 @@ $( document ).ready(function(){
     // console.log("Aggregated Data:", aggregatedData);
     //aggregatedDataM= aggregatedData;
     renderChart("f1",aggregatedData);
-    scatter("cas9all_new_All6.csv","T5")
     // scatter("cas9all_new_All2.csv","Gpt2")
 
     // Perform further operations with aggregatedData here
@@ -101,7 +96,7 @@ $( document ).ready(function(){
 
       }})
 
-  const models =["BiLSTM_T5","BiLSTM_GPT2","CNN_T5","CNN_GPT2","CNN_Bert","Trans_T5","Trans_GPT2","Trans_Bert","BiLSTM_Bert"];
+  const models =["BiLSTM_T5","BiLSTM_GPT2","BiLSTM_Bert","CNN_T5","CNN_GPT2","CNN_Bert","Trans_T5","Trans_GPT2","Trans_Bert"];
   modelViewer(models.length, "gray",models);
 
   //$('#sim_button');

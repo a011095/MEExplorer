@@ -16,7 +16,7 @@ let clickedPos;
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId,
                          align_sequences, accordion_table, ids_list, labels_list,model,models) {
     // Create the SVG element
-  const margins = { top: 5, right: 5, bottom: 10, left: 5 };
+  const margins = { top: 5, right: 5, bottom: 10, left: 15 };
   const width = $('#accordion-wrapper').width() - margins.right - margins.left;
     const height = 100;
     const chartHeight = height / 2 - 20;
@@ -51,7 +51,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     group.append("g")
         .attr("class", "x-axis")
         .attr("transform", `translate(0,${chartHeight - margins.bottom})`)
-        .call(d3.axisBottom(xScale).tickValues(d3.range(xScale.domain()[0],xScale.domain()[1]+1,(xScale.domain()[1]-xScale.domain()[0])/10)).tickSizeOuter(0))
+        .call(d3.axisBottom(xScale).tickValues(d3.range(xScale.domain()[0],xScale.domain()[1]+1,(xScale.domain()[1]-xScale.domain()[0])/5)).tickSizeOuter(0))
 
 
     // Adding label for each chart
@@ -126,9 +126,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
             // Update the x scale
             _xScale = t.rescaleX(xScale);
 
-
             if (event.type === "brush") return;
-            //console.log("test")
+
             const xz = event.transform.rescaleX(xScale);
             zoomScale = xz;
 
@@ -138,71 +137,87 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
                 _svg.selectAll("rect")
                     .attr("x", d => xz(d.ind))
                     .attr("width",function(d){
-                        if(xz(d.ind)>margins.left)
+                        if(xz(d.ind)>margins.left && xz(d.ind)<width - margins.right - 20)
                             if(d.count > 0) {
                                 return Math.abs(xz(1) - xz(0));
                             }
                             else
                                 return 0;
-                        //return xz(d.end) - xz(d.start);
                         else
                             return 0;
                     });
                 _svg.select("#line1"+_i).select(".x-axis")
-                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
+                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/5)).tickSizeOuter(0));
 
                 _svg.select("#line2"+_i).select(".x-axis")
-                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
+                    .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/5)).tickSizeOuter(0));
             }
-
-
-
-            // chartGroups.forEach(group => {
-            //     group.select("g")
-            //         .call(d3.axisBottom(xz).tickValues(d3.range(xz.domain()[0],xz.domain()[1]+1,(xz.domain()[1]-xz.domain()[0])/10)).tickSizeOuter(0));
-            //   });
         });
 
     svg.append("g")
         .attr("class", "brush_g")
 
+
+    let bZoom = false;
+
+
     svg.on('keydown', (event) => {
         if (event.key === "C" || event.key === "c") {
+            //if(!bZoom){
+                const brush = d3.brushX()
+                    .on("end", ({selection}) =>{
 
-            const brush = d3.brushX()
-                .on("end", ({selection}) =>{
+                        const [x0, x1] = selection
 
-                    const [x0, x1] = selection
+                        const startRange = _xScale.invert(x0);
+                        const endRange = _xScale.invert(x1);
 
-                    const startRange = _xScale.invert(x0);
-                    const endRange = _xScale.invert(x1);
+                        console.log(startRange, endRange);
 
-                    clickedPos = (selection[0] + selection[1] )/2.0;
-                    createAccordion(align_sequences, 0, accordion_table,
-                        [xScale(startRange),xScale(endRange)]   , " ", " ", ids_list, labels_list, 437)
-                });
+                        clickedPos = (selection[0] + selection[1] )/2.0;
+                        createAccordion(align_sequences, 0, accordion_table, [startRange,endRange]
+                              , " ", " ", ids_list, labels_list, 437)
 
-            d3.select(event.srcElement).select(".brush_g").call(brush)
+
+
+
+
+                    });
+
+                d3.select(event.srcElement).select(".brush_g").call(brush)
+            // }
+            // // else{
+            // //     d3.select(event.srcElement).call(zoom)
+            // //         .transition()
+            // //         .duration(500)
+            // //         .call(zoom.scaleTo, 1);
+            // // }
+            bZoom != bZoom;
         }
     })
+
+    svg.on('keyup', (event) => {
+        d3.select(event.srcElement).call(zoom)
+            .transition()
+            .duration(500)
+            .call(zoom.scaleTo, 1);
+    });
 
     svg.call(zoom)
         .transition()
         .duration(500)
         .call(zoom.scaleTo, 1);
 
-    svg.on('keyup', (event) => {
-        //console.log(event)
-        if (event.key === "C" || event.key === "c") {
-            //console.log("ctl_zoom")
-
-
-            d3.select(event.srcElement).call(zoom)
-                    .transition()
-                    .duration(500)
-                    .call(zoom.scaleTo, 1);
-        }
-    })
+    // svg.on('keyup', (event) => {
+    //
+    //     if (event.key === "C" || event.key === "c") {
+    //
+    //         d3.select(event.srcElement).call(zoom)
+    //                 .transition()
+    //                 .duration(500)
+    //                 .call(zoom.scaleTo, 1);
+    //     }
+    // })
 }
 
 
@@ -239,13 +254,14 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     else if(modelType=="Trans_Bert"){
         all_data = await d3.csv("cas9_bert_only.csv");
       }
-    
+
     let strings_l0=[]; //motif seq
     let probs_l0=[] //motif prob
     let all_pos_l0=[] //motif locations
+
       let strings_l1=[]; //motif seq
-      let probs_l1=[] //motif prob
-      let all_pos_l1=[] //motif locations
+    let probs_l1=[] //motif prob
+    let all_pos_l1=[] //motif locations
 
     all_data.forEach(d => {
         const mot = d.align_motifs;
@@ -274,36 +290,67 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     }
 
       strings_l0.forEach((seqList, index) => { //for each protein sequence
+
+          let tempSeq = new Array(seqLen).fill(0);
+          let tempSeqProb = new Array(seqLen).fill(0);
+
         seqList.forEach((seq, seqIndex) => { //for each motif candidate
             let [startPos, endPos] = all_pos_l0[index][seqIndex];
 
             endPos = (endPos > seqLen)?seqLen:endPos;
 
             for (let j = startPos; j < endPos; j++) {
-                try{
-                    sequenceL0[j].count += 1;
-                    sequenceL0[j].prob += probs_l0[index][seqIndex];
+                if (tempSeq[j] != 0 ){
+                    tempSeqProb[j] = (tempSeqProb[j]<probs_l0[index][seqIndex])?probs_l0[index][seqIndex] : tempSeqProb[j];
                 }
-                catch(error){
-                    console.error(j)
+                else{
+                    tempSeq[j] = 1;
+                    tempSeqProb[j] = probs_l0[index][seqIndex];
                 }
-
             }
         });
+            for (let j = 0; j < seqLen; j++) {
+                if (tempSeq[j] == 1){
+                    sequenceL0[j].count += 1;
+                    sequenceL0[j].prob += tempSeqProb[j];
+                }
+            }
     });
 
+
       strings_l1.forEach((seqList, index) => { //for each protein sequence
+          let tempSeq = new Array(seqLen).fill(0);
+          let tempSeqProb = new Array(seqLen).fill(0);
+
           seqList.forEach((seq, seqIndex) => { //for each motif candidate
               let [startPos, endPos] = all_pos_l1[index][seqIndex];
+
 
               endPos = (endPos > seqLen)?seqLen:endPos;
 
               for (let j = startPos; j < endPos; j++) {
-                  sequenceL1[j].count += 1;
-                  sequenceL1[j].prob += probs_l1[index][seqIndex];
+                  if (tempSeq[j] != 0 ){
+                      tempSeqProb[j] = (tempSeqProb[j]<probs_l1[index][seqIndex])?probs_l1[index][seqIndex] : tempSeqProb[j];
+                  }
+                  else{
+                      tempSeq[j] = 1;
+                      tempSeqProb[j] = probs_l1[index][seqIndex];
+                  }
               }
           });
+            for (let j = 0; j < seqLen; j++) {
+                if (tempSeq[j] == 1){
+                    sequenceL1[j].count += 1;
+                    sequenceL1[j].prob += tempSeqProb[j];
+                }
+            }
       });
+
+      if(modelType=="BiLSTM_T5"){
+          //console.log(count1,count2)
+          //console.log(all_pos_l1)
+          console.log(sequenceL1);
+      }
     return [sequenceL0,sequenceL1];
   }
 
@@ -346,7 +393,11 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       idsL=ids;
       labels=label_list;
       createAccordion(align0_new, 0, "accordion_main",
-        [], " ", " ", ids, label_list, align_sequences.length)
+        [], " ", " ", ids,label_list, align_sequences.length)
+
+        //sequences, label, div, seqRange, highlightRange, right_left, color, id_list, label_list, N
+
+
       // createAccordion(align0_new, 0, "accordion_main", " ","",false,ids,label_list,align_sequences.length)
       // createAccordion(ids, 0, "side_table", " ","right",true)
     });
@@ -413,7 +464,9 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       return characterWidth;
   }
 
-  function createAccordion(sequences, label, div, highlightRange, right_left, color, id_list, label_list, N) {
+
+  //Sequence Viz....
+  function createAccordion(sequences, label, div, seqRange, right_left, color, id_list, label_list, N) {
     console.log("number of sequences: ", N);
   
     const container = document.getElementById(div);
@@ -421,11 +474,6 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
   
     let filteredSequences = sequences; // Use all sequences
 
-
-      //console.log(sequences)
-      //for(let i=0;i<sequences.length;i++){
-      //    console.log(sequences[i].length)
-      //}
     const filteredSequences_new = filteredSequences.slice(0, N);
     const maxSeqLength = Math.max(...filteredSequences_new.map(seq => seq.length));
   
@@ -440,6 +488,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
   
     filteredSequences_new.forEach((seq, index) => {
       const tr = document.createElement('tr');
+        tr.id = id_list[index].split('.')[0];
+        tr.pos = index;
       const td1 = document.createElement('td');
       const td2 = document.createElement('td');
       td1.style.width = '25%';
@@ -453,7 +503,11 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       box.style.marginRight = '5px';
   
       td1.appendChild(box);
-      td1.appendChild(document.createTextNode(id_list[index]));
+
+      let textLabel = document.createTextNode(id_list[index])
+
+
+      td1.appendChild(textLabel);
       td1.style.fontSize = "18px";
       td1.style.textAlign = "left";
       td1.style.fontFamily = "'Courier New', monospace";
@@ -464,11 +518,13 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
 
 
       //TODO: handle this!!! click nothing clickedPos
-      if (highlightRange.length === 0) {
+      if (seqRange.length === 0) {
         modifiedSeq = paddedSeq; // Display without highlights if highlightRange is empty
       } else {
         for (let i = 0; i < paddedSeq.length; i++) {
-          if (highlightRange[0] <= i && i <= highlightRange[1]) {
+          if (seqRange[0] <= i && i <= seqRange[1]) {
+
+             // console.log(paddedSeq[i])
             modifiedSeq += `<span class="highlight">${paddedSeq[i]}</span>`;
           } else {
             modifiedSeq += paddedSeq[i];
@@ -489,19 +545,16 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     panel.appendChild(table);
     container.appendChild(panel);
   
-    if (highlightRange.length > 0) {
+    if (seqRange.length > 0) {
       // Scroll adjustment to center the highlighted area if highlightRange is not empty
       const characterWidth = getCharacterWidth("'Courier New', monospace", "18px");
       const viewableAreaWidth = container.clientWidth; 
-      const midPoint = (highlightRange[0] + highlightRange[1]) / 2;
-
+      //const midPoint = (highlightRange[0] + highlightRange[1]) / 2;
+        const midPoint = (seqRange[0] + seqRange[1]) / 2;
 
       const scrollPosition = midPoint * characterWidth - viewableAreaWidth / 2;
 
         console.log(midPoint,scrollPosition);
-
-      //  container.scrollLeft = scrollPosition
-      //  panel.scrollLeft = scrollPosition
         const wrapper = document.getElementById('accordion-wrapper')
       setTimeout(() => container.scrollLeft = scrollPosition, 0);
         setTimeout(() => wrapper.scrollLeft = scrollPosition, 0);
