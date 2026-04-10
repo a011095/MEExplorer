@@ -2,6 +2,8 @@
 // import { and } from 'vega-lite-api';
 import { scatter } from './scatter_d3.js';
 
+let hoverDismissListenerRegistered = false;
+
 export function heatmapN(vis, headline, metric, agg_data,myColor) {
   let svgContainer = d3.select("#" + vis + " svg");
 
@@ -40,6 +42,23 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     height = document.getElementById(vis).getBoundingClientRect().height - margin.top - margin.bottom;
 
   d3.select("#" + vis).selectAll("svg").remove();
+
+  if (!hoverDismissListenerRegistered) {
+    document.addEventListener("click", function(event) {
+      const heatmapContainer = document.getElementById(vis);
+      const hoverPanel = document.getElementById("hover");
+
+      if (!heatmapContainer || !hoverPanel) {
+        return;
+      }
+
+      if (!heatmapContainer.contains(event.target)) {
+        d3.select("#hover").style("opacity", 0);
+      }
+    });
+
+    hoverDismissListenerRegistered = true;
+  }
 
 
   const svg = d3.select("#"+vis)
@@ -135,13 +154,38 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("opacity", 1)
     }
 
-    const applySelection = async function(cellSelection, d) {
-      selected.length=0;
-      const tooltip = d3.select("#hover");
-      tooltip.html("");
+    const getMetricScore = function(metricKey, datum) {
+      const metricValues = agg[metricKey];
+      if (!metricValues) {
+        return null;
+      }
 
-      tooltip
-        .html( d.Model + ", " + d.Emb +" selected")
+      const key = `${datum.Model},${datum.Emb}`;
+      const value = metricValues[key];
+      return Number.isFinite(value) ? value : null;
+    };
+
+    const formatScore = function(value) {
+      return value === null ? "N/A" : `${value}%`;
+    };
+
+    const applySelection = async function(cellSelection, d, event) {
+      selected.length=0;
+      const hoverPanel = d3.select("#hover");
+      const selectedScore = getMetricScore(metric, d);
+      const container = document.getElementById(vis);
+      const containerRect = container.getBoundingClientRect();
+      const clickX = event ? event.clientX : containerRect.left + 12;
+      const clickY = event ? event.clientY : containerRect.top + 12;
+      const left = Math.max(8, clickX - containerRect.left + 12);
+      const top = Math.max(8, clickY - containerRect.top + 12);
+
+      hoverPanel
+        .html(`
+          ${formatScore(selectedScore)}
+        `)
+        .style("left", `${left}px`)
+        .style("top", `${top}px`)
         .style("opacity", 1)
 
       svg.selectAll(".heatmap-cell")
@@ -167,8 +211,12 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   }
 
     const click = async function(event, d) {
-      await applySelection(d3.select(this), d);
+      await applySelection(d3.select(this), d, event);
   }
+
+    const mouseleave = function() {
+      d3.select("#hover").style("opacity", 0);
+    }
 
     // add the squares
     const dicts = agg[metric];
@@ -197,6 +245,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("opacity", 0.8)
           .style("cursor", "pointer")
         .on("mouseover", mouseover)
+        .on("mouseleave", mouseleave)
         .on("click",click)
 
     const defaultDatum = data.find(d => d.Model === "BiLSTM" && d.Emb === "T5") || data[0];

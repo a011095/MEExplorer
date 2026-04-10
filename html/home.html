@@ -20,6 +20,21 @@
           /* Adjust transform for any specific adjustments if needed */
         }
 
+                #hover{
+                        width: 270px;
+                        min-height: 70px;
+                        height: auto;
+                        border: 1px solid white;
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        padding: 8px 10px;
+                        background: rgba(255, 255, 255, 0.95);
+                        border-radius: 6px;
+                        font-size: 13px;
+                        line-height: 1.4;
+                }
+
         #scatter-vis {
             width: 75vw;
             height: 450px;
@@ -72,6 +87,7 @@
                 <h5 class="ui header">Model Overview</h5>
             </div>
             <div id="dropdown-box" class="ui segment"></div>
+            <div id="hover"></div>
         </div>
     </div>
     <div class="sixteen wide column">
