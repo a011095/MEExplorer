@@ -18,33 +18,40 @@
 
 .motif-viewer{
     width: 98%;
-    height: 15%;
+    height: auto;
+    min-height: 0;
     border: 1px solid white;
-    float: right;
+    display: block;
     margin-top: 10px;
     position: relative;
-
-    transform-style: translateX(-8px);
+    box-sizing: border-box;
 }
 
 .motif-view-label{
     align-items: center;
-    height: 25px;
-    width: 100px;
-    margin-top: 0px;
-    margin-bottom: 0px;
+    min-height: 25px;
+    width: 100%;
+    margin: 0;
     color: black;
-    margin-left: 0px;
+    padding: 4px 8px;
+    box-sizing: border-box;
 }
 
 .motif-viewer1{
     width:100%;
-    height: 100px;
+    height: auto;
+    min-height: 0;
     border: 1px solid white;
-    float: left;
+    display: block;
     position: relative;
-    transform-style: translateX(8px);
-    left: 10px
+    left: 0;
+    box-sizing: border-box;
+}
+
+.motif-viewer1 svg {
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 /**/
@@ -136,7 +143,7 @@ g.tick text {
     height: 900px;
     border: 1px solid white;
     margin-top: 10px;
-//- position: relative;
+    position: relative;
     float: left;
     margin-left: auto;
     margin-right: auto;
@@ -195,13 +202,17 @@ g.tick text {
 }
 
 #legend-wrapper{
-    width: 150px;
-    height: 30px;
-    border: 1px solid white;
-    float: left;
-    position:absolute;
-    top:0px;
-    left:130px;
+    width: 230px;
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid #999;
+    box-shadow: none;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.94);
+    box-sizing: border-box;
 
 }
 #legend-wrapper1{
@@ -247,9 +258,12 @@ g.tick text {
 }
 #legend-color {
     width: 100%; /* Occupy full width of legend-wrapper */
-    height: 40px; /* Adjust height as needed */
-    border: 1px solid white;
-    margin-top:-10px;
+    min-height: 40px;
+    height: auto;
+    border: 0;
+    margin-top: 0;
+    padding: 6px 8px;
+    box-sizing: border-box;
 }
 #legend-color1 {
     width: 100%; /* Occupy full width of legend-wrapper */

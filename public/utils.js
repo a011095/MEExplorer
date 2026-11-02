@@ -1,12 +1,8 @@
-import { loadData } from './read_csv.js';
 import { heatmap } from './drawHeat.js';
-import { heatmapN } from './drawHeat.js';
 
 // import { setupButtonListeners } from './drawHeat.js';
 import { modelViewer } from './motif.js';
- // renderHeat(data1)
-const dictinary={"acc":"/dat/files.csv",
- "f1":"/dat/files1.csv"};
+import { getMetricFiles, getModelList } from './config.js';
 
 async function aggregateDataFromCSVs(dict) {
   let aggregatedData = {};
@@ -28,45 +24,36 @@ async function aggregateDataFromCSVs(dict) {
 }
 
 //for model comparison view
-async function renderChart(data_val,agg_data){
-
-  const cols = d3.scaleSequential()
-    .interpolator(d3.interpolateReds)
-    .domain([1,100])
-
-  if (data_val=="accuracy"){
-    const tf =heatmapN("heat-vis", " ", "acc", agg_data,cols)
-    if (tf==false){
-      const select = await heatmap("/dat/files.csv","heat-vis","Accuracy Heat Map","acc",agg_data)
-      // scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all.csv",select[1])
-    }
-    else{
-      console.log("not needed");
-    }
-  }else if (data_val == "f1") {
-    // Assuming you have another URL or selector for precision
-    const tf= heatmapN("heat-vis", " ", "f1", agg_data,cols)
-    if(tf==false){
-      const select = await heatmap("/dat/files1.csv", "heat-vis","F1 Score Heat Map","f1",agg_data);
-      // scatter("https://raw.githubusercontent.com/vikash06131721/Data-host/main/cas9all.csv",select[1])
-    }
-    else{
-      console.log("not needed");
-    }
+async function renderChart(data_val, agg_data, metricFiles){
+  const metric = data_val === "accuracy" ? "acc" : data_val;
+  const file = metric === "acc" ? metricFiles.accuracy : metricFiles.f1;
+  if (!file) {
+    throw new Error(`Unknown heatmap metric "${data_val}"`);
   }
+
+  // Rebuild the heatmap for each metric so its labels come from that CSV.
+  await heatmap(
+    file,
+    "heat-vis",
+    metric === "acc" ? "Accuracy Heat Map" : "F1 Score Heat Map",
+    metric,
+    agg_data
+  );
 }
 
 
 // Example usage:
 
 
-$( document ).ready(function(){
+$( document ).ready(async function(){
+  const metricFiles = await getMetricFiles();
+  const dictionary = { acc: metricFiles.accuracy, f1: metricFiles.f1 };
   //change the visualization for sequences
   //let aggregatedDataM=[]
-  aggregateDataFromCSVs(dictinary).then(aggregatedData => {
+  aggregateDataFromCSVs(dictionary).then(aggregatedData => {
     // console.log("Aggregated Data:", aggregatedData);
     //aggregatedDataM= aggregatedData;
-    renderChart("f1",aggregatedData);
+    renderChart("f1",aggregatedData, dictionary);
     // scatter("cas9all_new_All2.csv","Gpt2")
 
     // Perform further operations with aggregatedData here
@@ -83,10 +70,10 @@ $( document ).ready(function(){
           //console.log(value, gViewType);
 
           //console.log('metric viz is changed')
-          aggregateDataFromCSVs(dictinary).then(aggregatedData => {
+          aggregateDataFromCSVs(dictionary).then(aggregatedData => {
             // console.log("Aggregated Data:", aggregatedData);
 
-            renderChart(value,aggregatedData);
+            renderChart(value,aggregatedData, dictionary);
 
 
             // Perform further operations with aggregatedData here
@@ -96,8 +83,11 @@ $( document ).ready(function(){
 
       }})
 
-  const models =["BiLSTM_T5","BiLSTM_GPT2","BiLSTM_Bert","CNN_T5","CNN_GPT2","CNN_Bert","Trans_T5","Trans_GPT2","Trans_Bert"];
-  modelViewer(models.length, "gray",models);
+  getModelList().then(models => {
+    modelViewer(models.length, "gray", models);
+  }).catch(error => {
+    console.error("Error building model list:", error);
+  });
 
   //$('#sim_button');
   var content = document.querySelector('#accordion-wrapper');

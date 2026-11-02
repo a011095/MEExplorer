@@ -1,6 +1,7 @@
 // set the dimensions and margins of the graph
 // import { and } from 'vega-lite-api';
 import { scatter } from './scatter_d3.js';
+import { getDataConfig } from './config.js';
 
 let hoverDismissListenerRegistered = false;
 
@@ -68,23 +69,37 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  //Read the data
-  d3.csv(file_name).then(function(data) {
+  // Read labels and values directly from the selected metric CSV.
+  const [data, config] = await Promise.all([
+    d3.csv(file_name),
+    getDataConfig()
+  ]);
+  const embeddingAliases = { gpt2: "albert" };
+  const classificationAliases = { trans: "transformer" };
+  const canonicalName = (value, aliases) => {
+    const text = String(value).trim();
+    return aliases[text.toLowerCase()] || text;
+  };
+  data.forEach((d) => {
+    d.displayModel = canonicalName(d.Model, classificationAliases);
+    d.displayEmb = canonicalName(d.Emb, embeddingAliases);
+  });
 
     const highlightTopRightViewer = function(model, emb) {
       pendingViewerSelection = { model, emb };
-      const selectedDiv = '#viewer1' + model + '_' + emb;
+      const selectedId = `viewer1${canonicalName(model, classificationAliases)}_${canonicalName(emb, embeddingAliases)}`;
 
       d3.selectAll('.motif-viewer1').style('border', 'none');
 
-      if ($(selectedDiv).length === 0) {
+      const selectedElement = document.getElementById(selectedId);
+      if (!selectedElement) {
         return false;
       }
 
-      $(selectedDiv).css({
-        'border': '4px solid #4daf4a',
-        'border-radius': '10px'
-      });
+      d3.select(selectedElement)
+        .style('border', '4px solid #4daf4a')
+        .style('border-radius', '10px');
+      selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
       return true;
     };
@@ -100,8 +115,18 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     }
 
     // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
-    const myGroups = Array.from(new Set(data.map(d => d.Model)))
-    const myVars = Array.from(new Set(data.map(d => d.Emb)))
+    const configuredModels = config.classification_models.map((model) =>
+      canonicalName(model, classificationAliases));
+    const configuredEmbeddings = config.embedding_models.map((embedding) =>
+      canonicalName(embedding, embeddingAliases));
+    const myGroups = configuredModels.filter((model) =>
+      data.some((d) => d.displayModel === model));
+    const myVars = configuredEmbeddings.filter((embedding) =>
+      data.some((d) => d.displayEmb === embedding));
+    data.forEach((d) => {
+      if (!myGroups.includes(d.displayModel)) myGroups.push(d.displayModel);
+      if (!myVars.includes(d.displayEmb)) myVars.push(d.displayEmb);
+    });
     let agg = agg_data;
 
     // Build X scales and axis:
@@ -117,7 +142,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
 
     // Build Y scales and axis:
     const y = d3.scaleBand()
-      .range([ height, 0 ])
+      .range([ 0, height ])
       .domain(myVars)
       .padding(0.05);
     svg.append("g")
@@ -204,9 +229,9 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         svgElement.remove();
       }
 
-      await scatter("/dat/cas9all_new_All6.csv",d.Emb)
+      await scatter("/dat/align_umap_with_gpt2_bert_t5.csv",d.Emb)
 
-      highlightTopRightViewer(d.Model, d.Emb);
+      highlightTopRightViewer(d.displayModel, d.displayEmb);
       console.log(selected);
   }
 
@@ -224,8 +249,8 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       .data(data, function(d) {return d.Model+':'+d.Emb;})
       .join("rect")
         .attr("class", "heatmap-cell")
-        .attr("x", function(d) { return x(d.Model) })
-        .attr("y", function(d) { return y(d.Emb) })
+        .attr("x", function(d) { return x(d.displayModel) })
+        .attr("y", function(d) { return y(d.displayEmb) })
         .attr("rx", 4)
         .attr("ry", 4)
         .attr("width", x.bandwidth() )
@@ -248,15 +273,13 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .on("mouseleave", mouseleave)
         .on("click",click)
 
-    const defaultDatum = data.find(d => d.Model === "BiLSTM" && d.Emb === "T5") || data[0];
+    const defaultDatum = data[0];
     if (defaultDatum) {
       const defaultCell = cells.filter(cell => cell.Model === defaultDatum.Model && cell.Emb === defaultDatum.Emb);
       if (!defaultCell.empty()) {
         applySelection(defaultCell, defaultDatum);
       }
     }
-  })
-
   // Add title to graph
   svg.append("text")
           .attr("x", 0)
@@ -319,5 +342,3 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   return selected;
           
 }
-
-

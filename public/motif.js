@@ -2,16 +2,106 @@ import { createColorLegendBar } from './scatter_d3.js';
 import { addLegendLabels } from './scatter_d3.js';
 import { color_hues_for_blues } from './scatter_d3.js';
 import { color_hues_green_ } from './scatter_d3.js';
+import { getClassColor } from './scatter_d3.js';
+import { getCsvFileForModel, getLabels, getProjectionFile } from './config.js';
 
 let seqLen = 3065
+let configuredLabels = [];
 
 const svgGlobal = {}
 const containerNames = []
-
 export let zoomScale = 1;
 //let brush;
 
 let clickedPos;
+
+function parseCsvValue(value, fallback) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (String(value).trim().toLowerCase() === "none") return fallback;
+  try {
+    return JSON.parse(String(value).replace(/'/g, '"'));
+  } catch (error) {
+    console.error("Unable to parse motif CSV value:", value, error);
+    return fallback;
+  }
+}
+
+function labelIndex(value, labels) {
+  const numeric = Number(value);
+  if (Number.isInteger(numeric) && numeric >= 0 && numeric < labels.length) return numeric;
+  return labels.findIndex((label) => label.toLowerCase() === String(value).trim().toLowerCase());
+}
+
+function getDisplayedSequenceId(value) {
+  const sequenceId = String(value ?? "");
+  const separatorIndex = sequenceId.indexOf("::");
+  if (separatorIndex < 0) return sequenceId;
+
+  const suffix = sequenceId.slice(separatorIndex + 2).trim();
+  return suffix.split(/[|,\s]/, 1)[0] || sequenceId;
+}
+
+function createLabelChart(container, datasets, labels, chartId, alignSequences,
+                          accordionTable, idsList, labelsList, model, models) {
+  const margins = { top: 5, right: 5, bottom: 10, left: 15 };
+  const width = $('#accordion-wrapper').width() - margins.right - margins.left;
+  const rowHeight = 45;
+  const height = Math.max(100, labels.length * rowHeight);
+  const chartHeight = rowHeight - 10;
+  const barHeight = 20;
+  const svg = d3.select(container).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`).attr("tabindex", 0)
+    .attr("width", width).attr("height", height).attr("id", chartId)
+    .style("max-width", "100%").style("height", "auto");
+  svgGlobal[container.id] = svg;
+  containerNames.push(container.id);
+
+  const xScale = d3.scaleLinear().domain([0, seqLen])
+    .range([margins.left, width - margins.right - 20]);
+  let currentScale = xScale;
+  const groups = datasets.map((dataset, index) => {
+    const group = svg.append("g").attr("id", `line${model}_${index}`)
+      .attr("transform", `translate(0, ${margins.top + index * rowHeight})`);
+    group.append("text").attr("x", margins.left + 5).attr("y", 15)
+      .style("font-size", "11px").text(labels[index]);
+    group.append("g").attr("class", "x-axis").attr("transform", `translate(0,${chartHeight})`)
+      .call(d3.axisBottom(xScale).ticks(5).tickSizeOuter(0));
+    const max = d3.max(dataset, (d) => d.prob) || 1;
+    const classColor = getClassColor(labels[index], labels);
+    group.selectAll("rect").data(dataset).join("rect")
+      .attr("x", (d) => xScale(d.ind)).attr("y", chartHeight - barHeight)
+      .attr("width", (d) => d.count > 0 ? Math.abs(xScale(1) - xScale(0)) : 0)
+      .attr("height", barHeight)
+      .attr("fill", (d) => d3.interpolate("white", classColor)(d.prob / max));
+    return group;
+  });
+
+  const zoom = d3.zoom().scaleExtent([1, 32])
+    .translateExtent([[margins.left, 0], [width - margins.right - 20, height]])
+    .extent([[margins.left, 0], [width - margins.right - 20, height]])
+    .on("zoom", (event) => {
+      currentScale = event.transform.rescaleX(xScale);
+      zoomScale = currentScale;
+      groups.forEach((group) => {
+        group.selectAll("rect").attr("x", (d) => currentScale(d.ind))
+          .attr("width", (d) => d.count > 0 ? Math.abs(currentScale(1) - currentScale(0)) : 0);
+        group.select(".x-axis").call(d3.axisBottom(currentScale).ticks(5).tickSizeOuter(0));
+      });
+    });
+  svg.on("keydown", (event) => {
+    if (event.key.toLowerCase() === "c") {
+      const brush = d3.brushX().on("end", ({ selection }) => {
+        if (!selection) return;
+        createAccordion(alignSequences, 0, accordionTable,
+          [currentScale.invert(selection[0]), currentScale.invert(selection[1])],
+          " ", " ", idsList, labelsList, idsList.length);
+      });
+      svg.select(".brush_g").call(brush);
+    }
+  });
+  svg.append("g").attr("class", "brush_g");
+  svg.call(zoom).transition().duration(500).call(zoom.scaleTo, 1);
+}
 
 function createDualChart(container, data1, color1, label1, data2, color2, label2, chartId,
                          align_sequences, accordion_table, ids_list, labels_list,model,models) {
@@ -176,7 +266,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
 
                         clickedPos = (selection[0] + selection[1] )/2.0;
                         createAccordion(align_sequences, 0, accordion_table, [startRange,endRange]
-                              , " ", " ", ids_list, labels_list, 437)
+                              , " ", " ", ids_list, labels_list, ids_list.length)
 
 
 
@@ -224,36 +314,10 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
 
 
   async function return_popular_motifs0(modelType,N) {
-    // Load and process the CSV file
-    const motif_data = await d3.json("https://raw.githubusercontent.com/vikash06131721/Data-host/main/group0.json");
+    // Load and process the CSV file (path resolved from data_config.json)
+    const csvFile = await getCsvFileForModel(modelType);
     let all_data;
-    if(modelType=="BiLSTM_T5"){
-        all_data = await d3.csv("/dat/cas9_bisltm_t5.csv");
-      }
-    else if(modelType=="CNN_T5"){
-        all_data = await  d3.csv("/dat/cas9_cnn_t5.csv");
-      }
-    else if(modelType=="BiLSTM_GPT2"){
-        all_data = await d3.csv("/dat/cas9_bilstm_gpt2.csv");
-      }
-    else if(modelType=="BiLSTM_Bert"){
-        all_data = await d3.csv("/dat/cas9_bert_lstm.csv");
-      }
-    else if(modelType=="CNN_GPT2"){
-        all_data = await d3.csv("/dat/cas9_cnn_gpt2.csv");
-      }
-    else if(modelType=="CNN_Bert"){
-        all_data = await d3.csv("/dat/cas9_bert_cnn.csv");
-      }
-    else if(modelType=="Trans_GPT2"){
-        all_data = await d3.csv("/dat/cas9_gpt2_only.csv");
-      }
-    else if(modelType=="Trans_T5"){
-        all_data = await d3.csv("/dat/cas9_t5_only.csv");
-      }
-    else if(modelType=="Trans_Bert"){
-        all_data = await d3.csv("/dat/cas9_bert_only.csv");
-      }
+    all_data = await d3.csv(csvFile);
 
     let strings_l0=[]; //motif seq
     let probs_l0=[] //motif prob
@@ -346,12 +410,39 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
             }
       });
 
-      if(modelType=="BiLSTM_T5"){
-          //console.log(count1,count2)
-          //console.log(all_pos_l1)
-          console.log(sequenceL1);
-      }
     return [sequenceL0,sequenceL1];
+  }
+
+  async function return_popular_motifs(modelType, labels) {
+    const csvFile = await getCsvFileForModel(modelType);
+    const allData = await d3.csv(csvFile);
+    const sequences = labels.map(() =>
+      Array.from({ length: seqLen }, (_, ind) => ({ count: 0, prob: 0, ind }))
+    );
+
+    allData.forEach((row) => {
+      const index = labelIndex(row.label, labels);
+      if (index < 0) return;
+      const motifs = parseCsvValue(row.align_motifs, []);
+      const probabilities = parseCsvValue(row.prob, []);
+      const positions = parseCsvValue(row.align_start_stop, []);
+      const covered = new Map();
+      motifs.forEach((_, motifIndex) => {
+        const position = positions[motifIndex];
+        if (!Array.isArray(position)) return;
+        const start = Math.max(0, Number(position[0]) || 0);
+        const end = Math.min(seqLen, Number(position[1]) || start);
+        for (let positionIndex = start; positionIndex < end; positionIndex++) {
+          const probability = Number(probabilities[motifIndex]) || 0;
+          covered.set(positionIndex, Math.max(covered.get(positionIndex) || 0, probability));
+        }
+      });
+      covered.forEach((probability, positionIndex) => {
+        sequences[index][positionIndex].count += 1;
+        sequences[index][positionIndex].prob += probability;
+      });
+    });
+    return sequences;
   }
 
 
@@ -382,11 +473,16 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     let labels;
 
     //for the sequence view
-    d3.csv("/dat/cas9_align_umap_with_gpt2_bert_t5.csv").then(function(data) {
+    const [labelsConfig, projectionFile] = await Promise.all([getLabels(), getProjectionFile()]);
+    configuredLabels = labelsConfig;
+    d3.csv(projectionFile).then(function(data) {
       const view_table_accordion_main = createHtmlViews("accordion_main","98%")
       acc.append(view_table_accordion_main)
       // acc.append(view_side_tabel)
-      const align0_new = Array.from(new Set(data.map(d => d.aligned)));
+      const align0_new = data.map(d => {
+        const aligned = String(d.aligned || "").trim();
+        return aligned || d.sequence || "";
+      });
       align_sequences = align0_new;
       const ids = Array.from(data.map(d => d.ID));
       const label_list = Array.from(data.map(d => d.label));
@@ -424,7 +520,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       let keys1 = Object.keys(pop0); // Get all keys
       let keys2 = Object.keys(pop1);
         */
-      let [datL0,datL1] =  await return_popular_motifs0(motif[i],N);
+      const datByLabel = await return_popular_motifs(motif[i], labelsConfig);
 
       const viewer1 = document.createElement("div");
       viewer1.id = "viewer1"+motif[i]; // Setting a unique ID to the div
@@ -438,8 +534,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       });
       viewer.append(viewer1);
 
-        createDualChart(viewer1, datL0, color_hues_for_blues, "Pathogenic", datL1,
-            color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i],motif)
+        createLabelChart(viewer1, datByLabel, labelsConfig, "line"+motif[i],
+          align_sequences, "accordion_main", idsL, labels, motif[i], motif)
 
       // createDualChart(viewer1, indexRangesProb, color_hues_for_blues, "Pathogenic", indexRangesProb1,
       // color_hues_green_, "Non-Pathogenic", "line"+motif[i], align_sequences, "accordion_main", idsL, labels,motif[i])
@@ -492,19 +588,25 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
         tr.pos = index;
       const td1 = document.createElement('td');
       const td2 = document.createElement('td');
-      td1.style.width = '25%';
+      td1.classList.add('seq-meta-cell');
+      td1.style.width = '13%';
       td2.style.width = '75%';
+      td1.style.position = 'relative';
+      td1.style.zIndex = '3';
+      td1.style.backgroundColor = '#ffffff';
+      td1.style.whiteSpace = 'nowrap';
+      td1.style.paddingLeft = '8px';
   
       let box = document.createElement('span');
       box.style.display = 'inline-block';
       box.style.width = '10px';
       box.style.height = '10px';
-      box.style.backgroundColor = label_list[index] == 0 ? '#9ecae1' : '#f44336';
+      box.style.backgroundColor = getClassColor(label_list[index], configuredLabels);
       box.style.marginRight = '5px';
   
       td1.appendChild(box);
 
-      let textLabel = document.createTextNode(id_list[index])
+      let textLabel = document.createTextNode(getDisplayedSequenceId(id_list[index]))
 
 
       td1.appendChild(textLabel);
@@ -533,6 +635,8 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
       }
   
       td2.innerHTML = modifiedSeq;
+      td2.style.position = 'relative';
+      td2.style.zIndex = '1';
       td2.style.fontSize = "18px";
       td2.style.textAlign = "right";
       td2.style.fontFamily = "'Courier New', monospace";
@@ -544,6 +648,28 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
   
     panel.appendChild(table);
     container.appendChild(panel);
+
+    const scrollHost = document.getElementById('accordion-wrapper') || container;
+
+    if (container._seqMetaScrollHandler && container._seqMetaScrollHost) {
+      container._seqMetaScrollHost.removeEventListener('scroll', container._seqMetaScrollHandler);
+    }
+
+    const pinMetaCells = () => {
+      const hostOffset = scrollHost ? scrollHost.scrollLeft : 0;
+      const containerOffset = container ? container.scrollLeft : 0;
+      const offset = Math.max(hostOffset, containerOffset);
+      const leftNudge = 14;
+
+      table.querySelectorAll('.seq-meta-cell').forEach((cell) => {
+        cell.style.transform = `translateX(${offset - leftNudge}px)`;
+      });
+    };
+
+    pinMetaCells();
+    scrollHost.addEventListener('scroll', pinMetaCells);
+    container._seqMetaScrollHandler = pinMetaCells;
+    container._seqMetaScrollHost = scrollHost;
   
     if (seqRange.length > 0) {
       // Scroll adjustment to center the highlighted area if highlightRange is not empty
@@ -562,16 +688,6 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     }
   }
   
-
-
-
-
-
-
-
-
-
-
 
 
 

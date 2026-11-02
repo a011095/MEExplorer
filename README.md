@@ -1,6 +1,6 @@
 # MEExplorer
 
-MEExplorer is a visual analytics framework for exploring machine learning model outputs and sequence-related visualizations.
+MEExplorer is a small Express-based web app for exploring model outputs and sequence-related visualizations. The UI is rendered from a Pug template and loads client-side scripts and CSV data from the `public/` directory.
 
 ## Requirements
 

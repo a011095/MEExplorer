@@ -36,7 +36,7 @@ html(lang="en")
                 .column.align-left1
                   span.min-value1 0
                 .column.align-right1
-                  span.max-value2 437
+                  span.max-value2 0
             .ui.range.slider#threshold-slider2
               .slider-tooltip 0  // Tooltip placed here, after the slider
               .current-value-container1
@@ -44,23 +44,8 @@ html(lang="en")
 
       .six.wide.column
         #scatter-vis.ui.container.fluid.raised.segment
-          .ui.grid
-            .three.wide.column
-              #label0 Pathogenic:
-            .four.wide.column
-              #legend-color
-              #legend-labels
-            .four.wide.column
-              #label1 Non-Pathogenic:
-            .four.wide.column
-              section#legend-color1
-              section#legend-labels1
-          //#legend-wrapper.ui.raised.segment
-          //
-          //
-          //#legend-wrapper1.ui.raised.segment
-          //  section#legend-color1
-          //  section#legend-labels1
+          #legend-wrapper
+            #legend-color
         .ui.grid
           .row
             .eight.wide.column
@@ -111,4 +96,3 @@ html(lang="en")
     //- script(src="https://d3js.org/d3.v3.min.js")
     
   .script 
-

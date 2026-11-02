@@ -62,15 +62,15 @@
             /* Adjust transform for any specific adjustments if needed */
         }
         #legend-wrapper {
-            position: relative;
-            width: 600px;
-            height: 20px; /* Adjust as needed */
-            border: 1px solid white;
-            position: left;
-            margin-left: 10px;
-            margin-right: auto;
-            margin-top: 400px;
-            transform: translateX(0px);
+            position: absolute;
+            width: 230px;
+            max-height: 360px;
+            overflow-y: auto;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.94);
         }
         /* Custom Styles */
         /* Add your custom styles here */
@@ -97,9 +97,8 @@
             </div>
             <button class="ui button" id="sim_button">Similarity</button>
             <button class="ui button" id="consensus_button">Consensus</button>
-            <aside id="legend-wrapper" class="ui raised segment">
-                <section id="color-legend"></section>
-                <section id="legend-labels"></section>
+            <aside id="legend-wrapper">
+                <section id="legend-color"></section>
             </aside>
         
         </div>

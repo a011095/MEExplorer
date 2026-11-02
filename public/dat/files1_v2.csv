@@ -1,0 +1,10 @@
+Model,Emb,value
+BiLSTM,t5,90
+BiLSTM,bert,86
+BiLSTM,albert,75
+CNN,t5,87
+CNN,bert,87
+CNN,albert,92
+Transformer,t5,84
+Transformer,bert,80
+Transformer,albert,92
