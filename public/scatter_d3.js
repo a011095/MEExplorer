@@ -58,9 +58,19 @@ function getCircleValue(d, mode, labels) {
 }
 
 function parseFeatureArray(value, fallback = []) {
+    console.log("Parsing feature array:", value);
     if (value === undefined || value === null || value === "") return fallback;
     try {
-        return JSON.parse(String(value).replace(/'/g, '"'));
+        const parsed = JSON.parse(String(value).replace(/'/g, '"'));
+        const removeInvalidFeature = (item) => {
+            if (Array.isArray(item)) {
+                return item
+                    .filter((child) => String(child).trim().toLowerCase() !== "ad><p")
+                    .map(removeInvalidFeature);
+            }
+            return item;
+        };
+        return removeInvalidFeature(parsed);
     } catch (error) {
         console.error("Unable to parse classifier feature data:", error);
         return fallback;
@@ -410,6 +420,8 @@ export function createClassLegend(containerId, labels, data, mode) {
         .style("justify-content", "space-between")
         .style("width", "120px")
         .style("margin-left", "0")
+        .style("margin-top", "-15px")
+        .style("margin-bottom", "-5px")
         .style("font-size", "10px");
     range.append("span").text(formatValue(valueExtent[0]));
     range.append("span").text(formatValue(valueExtent[1]));
@@ -533,14 +545,15 @@ function updateDotsColor(svg, data, labels, valueScale) {
             };
           }
 
-function replaceModelReferences(d, cls, labelIndex) {
+function replaceModelReferences(d, cls, labelIndex, labels) {
             const newModel = cls;
             const { motifs, probabilities, ranges } = getAlignedModelData(d, newModel);
 
     // Create and place segments based on new model data
             const data_form = formChartData(motifs, probabilities, ranges);
-    addSegmentsToLine(`line${cls}_${labelIndex}`, data_form,
-      d3.scaleSequential(d3.interpolateBlues))
+    const classColor = getClassColor(d.label, labels);
+    addSegmentsToLine(`line${cls}_${labelIndex}`, data_form, (probability) =>
+      d3.interpolate("white", classColor)(probability))
 }
 
 function formChartData(seq, prob, pos) {
@@ -579,7 +592,7 @@ function formChartData(seq, prob, pos) {
 }
 
 
-function addSegmentsToLine(svgId, dataObjects,color) {
+function addSegmentsToLine(svgId, dataObjects, color) {
 
 
 
@@ -829,6 +842,7 @@ export function scatter(files_name,model){
     const classifierIds = modelIds.filter((modelId) =>
       modelId.toLowerCase().endsWith(`_${modelKey}`)
     );
+
     const classifierDataSets = await Promise.all(
       classifierIds.map(async (modelId) => {
         const rows = await d3.csv(await getCsvFileForModel(modelId));
@@ -958,9 +972,7 @@ export function scatter(files_name,model){
       d.y = d.targetY;
     });
     $(document).ready(function() {
-        initializeSlider2(classifierDataSets.length > 0
-          ? Math.max(...classifierDataSets.map((rows) => rows.length))
-          : data.length, function(value) {
+        initializeSlider2(data.length, function(value) {
           data.forEach((datum) => {
             datum.featureThreshold = value;
           });
@@ -1045,7 +1057,7 @@ export function scatter(files_name,model){
       `${dat.ID ?? 'Unknown'}`,
       `Class: ${labelName}`,
       `Length: ${dat.len ?? 'N/A'}`,
-      `Similarity: ${formatAnnotationValue(dat.similarity_T5)}`
+      `Similarity: ${formatAnnotationValue(getCircleValue(dat, "similarity", labels))}`
     ];
   }
 
@@ -1246,7 +1258,7 @@ export function scatter(files_name,model){
                 : classes;
               for (let cls of availableModels) {
                 try {
-                  replaceModelReferences(dat, cls, labelIndex);
+                  replaceModelReferences(dat, cls, labelIndex, labels);
                 } catch (error) {
                   console.error(`Error processing model ${cls}:`, error);
                 }
@@ -1340,8 +1352,25 @@ export function scatter(files_name,model){
 
 function initializeSlider2(max, callback) {
   const min = 0;
+  const slider = $('#threshold-slider2');
+  const handleSlide = function(event, ui) {
+    updateCurrentValuePosition(ui.value);
+    console.log('Slider value:', ui.value);
+    if (callback && typeof callback === 'function') {
+      callback(ui.value);
+    }
+  };
 
-  $('#threshold-slider2').slider({
+  if (slider.hasClass('ui-slider')) {
+    slider.slider('option', { min, max, step: 1 });
+    slider.slider('value', min);
+    $('.min-value1').text(min);
+    $('.max-value1, .max-value2').text(max);
+    updateCurrentValuePosition(min);
+    return;
+  }
+
+  slider.slider({
     min: min,
     max: max,
     step: 1,
@@ -1351,16 +1380,7 @@ function initializeSlider2(max, callback) {
       $('.max-value1, .max-value2').text(max);
       updateCurrentValuePosition($(this).slider('value'));  // Position the tooltip at start
     },
-    slide: function(event, ui) {
-      updateCurrentValuePosition(ui.value);  // Update the tooltip on slide
-
-      console.log('Slider value:', ui.value);  // Log the slider value
-      
-      // Execute the callback function if provided, with the current slider value
-      if (callback && typeof callback === 'function') {
-        callback(ui.value);
-      }
-    }
+    slide: handleSlide
   });
 }
 

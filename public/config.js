@@ -4,7 +4,7 @@ let configPromise = null;
 
 export function getDataConfig() {
   if (!configPromise) {
-    configPromise = d3.json("/data_config.json");
+    configPromise = d3.json(`/data_config.json?${Date.now()}`);
   }
   return configPromise;
 }

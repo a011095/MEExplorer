@@ -1,0 +1,64 @@
+{
+  "embedding_models": ["albert", "bert", "t5"],
+  "classification_models": ["BiLSTM", "CNN", "Transformer"],
+  "classes": ["Rhodopsin", "Secretin", "Adhesion", "Glutamate", "Frizzled"],
+  "projection":"align_umap_with_gpt2_bert_t5.csv",
+  "accuracy":"files_v2.csv",
+  "f1score":"files1_v2.csv",
+  "datasets": [
+    {
+      "name": "prot_albert_bilstm_from_saved_models",
+      "embedding_models": ["albert"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "prot_albert_bilstm_from_saved_models.csv"
+    },
+    {
+      "name": "prot_albert_cnn_from_saved_models",
+      "embedding_models": ["albert"],
+      "classification_models": ["CNN"],
+      "csv_file": "prot_albert_cnn_from_saved_models.csv"
+    },
+    {
+      "name": "prot_albert_transformer_from_saved_models",
+      "embedding_models": ["albert"],
+      "classification_models": ["Transformer"],
+      "csv_file": "prot_albert_transformer_from_saved_models.csv"
+    },
+    {
+      "name": "prot_bert_bilstm_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "prot_bert_bilstm_from_saved_models.csv"
+    },
+    {
+      "name": "prot_bert_cnn_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["CNN"],
+      "csv_file": "prot_bert_cnn_from_saved_models.csv"
+    },
+    {
+      "name": "prot_bert_transformer_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["Transformer"],
+      "csv_file": "prot_bert_transformer_from_saved_models.csv"
+    },
+    {
+      "name": "prot_t5_bilstm_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "prot_t5_bilstm_from_saved_models.csv"
+    },
+    {
+      "name": "prot_t5_cnn_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["CNN"],
+      "csv_file": "prot_t5_cnn_from_saved_models.csv"
+    },
+    {
+      "name": "prot_t5_transformer_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["Transformer"],
+      "csv_file": "prot_t5_transformer_from_saved_models.csv"
+    }
+  ]
+}

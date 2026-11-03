@@ -52,6 +52,7 @@
     display: block;
     width: 100%;
     height: auto;
+    overflow: visible;
 }
 
 /**/
@@ -202,7 +203,7 @@ g.tick text {
 }
 
 #legend-wrapper{
-    width: 230px;
+    width: 250px;
     max-height: 360px;
     overflow-y: auto;
     border: 1px solid #999;
@@ -361,9 +362,13 @@ g.tick text {
 
 #threshold-slider2.ui.range.slider {
     width: 40%;  /* Ensures the slider takes full width of its container */
-    left:10px;
+    left:20px;
     bottom:1px;
 
+}
+
+.motif-sort-controls {
+    margin-left: 10px;
 }
 
 .current-value-container {

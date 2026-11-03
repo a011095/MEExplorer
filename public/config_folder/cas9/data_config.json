@@ -1,0 +1,64 @@
+{
+  "embedding_models": ["gpt2", "bert", "t5"],
+  "classification_models": ["BiLSTM", "CNN", "Transformer"],
+  "classes": ["Pathogenic", "Non-Pathogenic"],
+  "projection":"cas9_align_umap_with_gpt2_bert_t5.csv",
+  "accuracy":"files.csv",
+  "f1score":"files1.csv",
+  "datasets": [
+    {
+      "name": "bert_bilstm_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "cas9_bert_lstm.csv"
+    },
+    {
+      "name": "bert_cnn_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["CNN"],
+      "csv_file": "cas9_bert_cnn.csv"
+    },
+    {
+      "name": "bert_transformer_from_saved_models",
+      "embedding_models": ["bert"],
+      "classification_models": ["Transformer"],
+      "csv_file": "cas9_bert_only.csv"
+    },
+    {
+      "name": "gpt2_bilstm_from_saved_models",
+      "embedding_models": ["gpt2"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "cas9_bilstm_gpt2.csv"
+    },
+    {
+      "name": "gpt2_cnn_from_saved_models",
+      "embedding_models": ["gpt2"],
+      "classification_models": ["CNN"],
+      "csv_file": "cas9_cnn_gpt2.csv"
+    },
+    {
+      "name": "gpt2_transformer_from_saved_models",
+      "embedding_models": ["gpt2"],
+      "classification_models": ["Transformer"],
+      "csv_file": "cas9_gpt2_only.csv"
+    },
+    {
+      "name": "t5_bilstm_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["BiLSTM"],
+      "csv_file": "cas9_bisltm_t5.csv"
+    },
+    {
+      "name": "t5_cnn_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["CNN"],
+      "csv_file": "cas9_cnn_t5.csv"
+    },
+    {
+      "name": "t5_transformer_from_saved_models",
+      "embedding_models": ["t5"],
+      "classification_models": ["Transformer"],
+      "csv_file": "cas9_t5_only.csv"
+    }
+  ]
+}

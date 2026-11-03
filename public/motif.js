@@ -14,6 +14,7 @@ export let zoomScale = 1;
 //let brush;
 
 let clickedPos;
+let motifSortMode = "classification";
 
 function parseCsvValue(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback;
@@ -41,12 +42,56 @@ function getDisplayedSequenceId(value) {
   return suffix.split(/[|,\s]/, 1)[0] || sequenceId;
 }
 
+function getModelParts(modelId) {
+  const separatorIndex = String(modelId).lastIndexOf("_");
+  return {
+    classification: separatorIndex >= 0 ? String(modelId).slice(0, separatorIndex) : String(modelId),
+    embedding: separatorIndex >= 0 ? String(modelId).slice(separatorIndex + 1) : ""
+  };
+}
+
+function sortMotifPanels(mode) {
+  const modelWrapper = document.getElementById("model-wrapper");
+  if (!modelWrapper) return;
+
+  const panels = Array.from(modelWrapper.querySelectorAll(":scope > .motif-viewer"));
+  panels.sort((a, b) => {
+    const first = getModelParts(a.dataset.modelId);
+    const second = getModelParts(b.dataset.modelId);
+    const primary = mode === "embedding" ? "embedding" : "classification";
+    const secondary = primary === "embedding" ? "classification" : "embedding";
+    const primaryOrder = Number(a.dataset[`${primary}Order`]) -
+      Number(b.dataset[`${primary}Order`]);
+    const secondaryOrder = Number(a.dataset[`${secondary}Order`]) -
+      Number(b.dataset[`${secondary}Order`]);
+    return primaryOrder || secondaryOrder ||
+      first[primary].localeCompare(second[primary]) ||
+      first[secondary].localeCompare(second[secondary]);
+  });
+  panels.forEach((panel) => modelWrapper.appendChild(panel));
+}
+
+function initializeMotifSortButton() {
+  const button = document.getElementById("motif-sort-button");
+  if (!button || button.dataset.initialized === "true") return;
+
+  button.dataset.initialized = "true";
+  button.addEventListener("click", () => {
+    motifSortMode = motifSortMode === "classification" ? "embedding" : "classification";
+    sortMotifPanels(motifSortMode);
+    button.textContent = motifSortMode === "embedding"
+      ? "Sort by classification model"
+      : "Sort by embedding";
+    button.setAttribute("aria-label", button.textContent);
+  });
+}
+
 function createLabelChart(container, datasets, labels, chartId, alignSequences,
                           accordionTable, idsList, labelsList, model, models) {
-  const margins = { top: 5, right: 5, bottom: 10, left: 15 };
+  const margins = { top: 5, right: 5, bottom: 18, left: 15 };
   const width = $('#accordion-wrapper').width() - margins.right - margins.left;
   const rowHeight = 45;
-  const height = Math.max(100, labels.length * rowHeight);
+  const height = Math.max(100, labels.length * rowHeight + margins.bottom);
   const chartHeight = rowHeight - 10;
   const barHeight = 20;
   const svg = d3.select(container).append("svg")
@@ -467,6 +512,7 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     }, 3000);
     let motifSingle = document.getElementById("model-wrapper");
     let acc = document.getElementById("accordion-wrapper");
+    initializeMotifSortButton();
 
     let align_sequences;
     let idsL;
@@ -475,6 +521,17 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     //for the sequence view
     const [labelsConfig, projectionFile] = await Promise.all([getLabels(), getProjectionFile()]);
     configuredLabels = labelsConfig;
+    const classificationOrder = new Map();
+    const embeddingOrder = new Map();
+    motif.forEach((modelId) => {
+      const { classification, embedding } = getModelParts(modelId);
+      if (!classificationOrder.has(classification)) {
+        classificationOrder.set(classification, classificationOrder.size);
+      }
+      if (!embeddingOrder.has(embedding)) {
+        embeddingOrder.set(embedding, embeddingOrder.size);
+      }
+    });
     d3.csv(projectionFile).then(function(data) {
       const view_table_accordion_main = createHtmlViews("accordion_main","98%")
       acc.append(view_table_accordion_main)
@@ -502,6 +559,10 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     for (let i = 0; i < numOfContainers; i++) {
       const viewer = document.createElement("div");
       viewer.classList.add("motif-viewer");
+      viewer.dataset.modelId = motif[i];
+      const modelParts = getModelParts(motif[i]);
+      viewer.dataset.classificationOrder = classificationOrder.get(modelParts.classification);
+      viewer.dataset.embeddingOrder = embeddingOrder.get(modelParts.embedding);
   
       // Create a new div element to serve as the text container
       let textContainer = document.createElement("div");
@@ -688,9 +749,5 @@ function createDualChart(container, data1, color1, label1, data2, color2, label2
     }
   }
   
-
-
-
-
 
 

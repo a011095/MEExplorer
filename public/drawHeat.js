@@ -1,7 +1,7 @@
 // set the dimensions and margins of the graph
 // import { and } from 'vega-lite-api';
 import { scatter } from './scatter_d3.js';
-import { getDataConfig } from './config.js';
+import { getDataConfig, getProjectionFile } from './config.js';
 
 let hoverDismissListenerRegistered = false;
 
@@ -229,7 +229,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         svgElement.remove();
       }
 
-      await scatter("/dat/align_umap_with_gpt2_bert_t5.csv",d.Emb)
+      await scatter(await getProjectionFile(), d.displayEmb)
 
       highlightTopRightViewer(d.displayModel, d.displayEmb);
       console.log(selected);
