@@ -4,6 +4,7 @@ import { scatter } from './scatter_d3.js';
 import { getDataConfig, getProjectionFile } from './config.js';
 
 let hoverDismissListenerRegistered = false;
+let heatmapRenderVersion = 0;
 
 export function heatmapN(vis, headline, metric, agg_data,myColor) {
   let svgContainer = d3.select("#" + vis + " svg");
@@ -35,14 +36,13 @@ export function heatmapN(vis, headline, metric, agg_data,myColor) {
 
 
 export async function heatmap(file_name,vis,headline,metric,agg_data){
+  const renderVersion = ++heatmapRenderVersion;
   const selected=[];
   let pendingViewerSelection = null;
   let modelViewerReadyListenerRegistered = false;
   const margin = {top: 10, right: 100, bottom: 100, left: 50},
     width = document.getElementById(vis).getBoundingClientRect().width - margin.left - margin.right,
     height = document.getElementById(vis).getBoundingClientRect().height - margin.top - margin.bottom;
-
-  d3.select("#" + vis).selectAll("svg").remove();
 
   if (!hoverDismissListenerRegistered) {
     document.addEventListener("click", function(event) {
@@ -62,32 +62,41 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   }
 
 
-  const svg = d3.select("#"+vis)
-  .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
   // Read labels and values directly from the selected metric CSV.
   const [data, config] = await Promise.all([
     d3.csv(file_name),
     getDataConfig()
   ]);
-  const embeddingAliases = { gpt2: "albert" };
-  const classificationAliases = { trans: "transformer" };
-  const canonicalName = (value, aliases) => {
+  if (renderVersion !== heatmapRenderVersion) {
+    return;
+  }
+
+  d3.select("#" + vis).selectAll("svg, .heatmap-tooltip").remove();
+
+  const svg = d3.select("#"+vis)
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  const configuredModels = config.classification_models;
+  const configuredEmbeddings = config.embedding_models;
+  const configuredName = (value, configuredNames) => {
     const text = String(value).trim();
-    return aliases[text.toLowerCase()] || text;
+    return configuredNames.find((name) =>
+      String(name).trim().toLowerCase() === text.toLowerCase()
+    ) || text;
   };
   data.forEach((d) => {
-    d.displayModel = canonicalName(d.Model, classificationAliases);
-    d.displayEmb = canonicalName(d.Emb, embeddingAliases);
+    d.displayModel = configuredName(d.Model, configuredModels);
+    d.displayEmb = configuredName(d.Emb, configuredEmbeddings);
   });
 
     const highlightTopRightViewer = function(model, emb) {
       pendingViewerSelection = { model, emb };
-      const selectedId = `viewer1${canonicalName(model, classificationAliases)}_${canonicalName(emb, embeddingAliases)}`;
+      const selectedId =
+        `viewer1${configuredName(model, configuredModels)}_${configuredName(emb, configuredEmbeddings)}`;
 
       d3.selectAll('.motif-viewer1').style('border', 'none');
 
@@ -115,10 +124,6 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     }
 
     // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
-    const configuredModels = config.classification_models.map((model) =>
-      canonicalName(model, classificationAliases));
-    const configuredEmbeddings = config.embedding_models.map((embedding) =>
-      canonicalName(embedding, embeddingAliases));
     const myGroups = configuredModels.filter((model) =>
       data.some((d) => d.displayModel === model));
     const myVars = configuredEmbeddings.filter((embedding) =>
@@ -156,10 +161,13 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       .domain([1,100])
 
     // create a tooltip
-    const tooltip = d3.select(vis)
+    const tooltip = d3.select(`#${vis}`)
       .append("div")
       .style("opacity", 0)
-      .attr("class", "tooltip")
+      .attr("class", "tooltip heatmap-tooltip")
+      .style("position", "absolute")
+      .style("pointer-events", "none")
+      .style("z-index", 6)
       .style("background-color", "white")
       .style("border", "solid")
       .style("border-width", "2px")
@@ -168,7 +176,16 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
 
     // Three function that change the tooltip when user hover / move / leave a cell
     const mouseover = function(event,d) {
+      const container = document.getElementById(vis);
+      const containerRect = container.getBoundingClientRect();
+      const score = getMetricScore(metric, d);
+      const metricLabel =
+        metric === "acc" || metric === "accuracy" ? "Accuracy" : "F1-score";
+
       tooltip
+        .html(`${metricLabel}: ${formatScore(score)}`)
+        .style("left", `${event.clientX - containerRect.left + 12}px`)
+        .style("top", `${event.clientY - containerRect.top + 12}px`)
         .style("opacity", 1)
 
       svg.selectAll("rect")
@@ -194,7 +211,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       return value === null ? "N/A" : `${value}%`;
     };
 
-    const applySelection = async function(cellSelection, d, event) {
+    const applySelection = async function(cellSelection, d, event, showTooltip = true) {
       selected.length=0;
       const hoverPanel = d3.select("#hover");
       const selectedScore = getMetricScore(metric, d);
@@ -205,13 +222,17 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
       const left = Math.max(8, clickX - containerRect.left + 12);
       const top = Math.max(8, clickY - containerRect.top + 12);
 
-      hoverPanel
-        .html(`
-          ${formatScore(selectedScore)}
-        `)
-        .style("left", `${left}px`)
-        .style("top", `${top}px`)
-        .style("opacity", 1)
+      if (showTooltip) {
+        hoverPanel
+          .html(`
+            ${formatScore(selectedScore)}
+          `)
+          .style("left", `${left}px`)
+          .style("top", `${top}px`)
+          .style("opacity", 1);
+      } else {
+        hoverPanel.style("opacity", 0);
+      }
 
       svg.selectAll(".heatmap-cell")
         .style("stroke", "none")
@@ -236,11 +257,12 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
   }
 
     const click = async function(event, d) {
-      await applySelection(d3.select(this), d, event);
+      tooltip.style("opacity", 0);
+      await applySelection(d3.select(this), d, event, false);
   }
 
     const mouseleave = function() {
-      d3.select("#hover").style("opacity", 0);
+      tooltip.style("opacity", 0);
     }
 
     // add the squares
@@ -270,6 +292,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
         .style("opacity", 0.8)
           .style("cursor", "pointer")
         .on("mouseover", mouseover)
+        .on("mousemove", mouseover)
         .on("mouseleave", mouseleave)
         .on("click",click)
 
@@ -277,7 +300,7 @@ export async function heatmap(file_name,vis,headline,metric,agg_data){
     if (defaultDatum) {
       const defaultCell = cells.filter(cell => cell.Model === defaultDatum.Model && cell.Emb === defaultDatum.Emb);
       if (!defaultCell.empty()) {
-        applySelection(defaultCell, defaultDatum);
+        applySelection(defaultCell, defaultDatum, undefined, false);
       }
     }
   // Add title to graph

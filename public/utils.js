@@ -48,12 +48,18 @@ async function renderChart(data_val, agg_data, metricFiles){
 $( document ).ready(async function(){
   const metricFiles = await getMetricFiles();
   const dictionary = { acc: metricFiles.accuracy, f1: metricFiles.f1 };
+  const setMetricTooltip = (value) => {
+    const tooltip = value === "accuracy" ? "Accuracy" : "F1-score";
+    const visibleLabel = value === "accuracy" ? "Accuracy" : "F1";
+    $('#metric_type, #metric_type + .ui.dropdown').attr('title', tooltip);
+    $('#metric_type + .ui.dropdown .text').text(visibleLabel);
+  };
   //change the visualization for sequences
   //let aggregatedDataM=[]
-  aggregateDataFromCSVs(dictionary).then(aggregatedData => {
+  aggregateDataFromCSVs(dictionary).then(async aggregatedData => {
     // console.log("Aggregated Data:", aggregatedData);
     //aggregatedDataM= aggregatedData;
-    renderChart("f1",aggregatedData, dictionary);
+    renderChart("f1", aggregatedData, metricFiles);
     // scatter("cas9all_new_All2.csv","Gpt2")
 
     // Perform further operations with aggregatedData here
@@ -64,16 +70,17 @@ $( document ).ready(async function(){
 
 
   $('#metric_type').dropdown(
-      {action: 'hide',onChange:function(value, text, $selectedItem){
+      {action: 'hide',onChange:async function(value, text, $selectedItem){
+          setMetricTooltip(value);
           //console.log($(this).val())
           //let gViewType = $(this).val();
           //console.log(value, gViewType);
 
           //console.log('metric viz is changed')
-          aggregateDataFromCSVs(dictionary).then(aggregatedData => {
+          aggregateDataFromCSVs(dictionary).then(async aggregatedData => {
             // console.log("Aggregated Data:", aggregatedData);
 
-            renderChart(value,aggregatedData, dictionary);
+            await renderChart(value, aggregatedData, metricFiles);
 
 
             // Perform further operations with aggregatedData here
@@ -82,6 +89,7 @@ $( document ).ready(async function(){
           });
 
       }})
+  setMetricTooltip($('#metric_type').val() || 'f1');
 
   getModelList().then(models => {
     modelViewer(models.length, "gray", models);

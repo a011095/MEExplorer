@@ -148,7 +148,7 @@ function getSimilarityColor(label, value, labels, valueScale) {
     return d3.interpolate("white", getClassColor(label, labels))(score);
 }
 
-function attachClassifierPredictions(data, classifierDataSets, labels) {
+function attachClassifierPredictions(data, classifierDataSets, labels, predictionModelIds) {
     const rowsBySequence = classifierDataSets.map((rows) => {
         const bySequence = new Map();
         const featurePositionCounts = new Map();
@@ -183,7 +183,10 @@ function attachClassifierPredictions(data, classifierDataSets, labels) {
             datum.classifierFeatureRowsByModel.set(rows.modelId, featureRow);
             return featureRow;
         }).filter((row) => row !== undefined && row !== "");
-        datum.classifierPredictions = datum.classifierFeatureRows.map((row) => row.label);
+        datum.classifierPredictions = datum.classifierFeatureRows
+            .filter((row) => !predictionModelIds ||
+                predictionModelIds.includes(row.modelId))
+            .map((row) => row.label);
     });
 }
 
@@ -839,19 +842,20 @@ export function scatter(files_name,model){
 
 
   Promise.all([getLabels(), d3.csv(files_name), getModelList()]).then(async function([labels, data, modelIds]) {
-    const classifierIds = modelIds.filter((modelId) =>
+    const predictionModelIds = modelIds.filter((modelId) =>
       modelId.toLowerCase().endsWith(`_${modelKey}`)
     );
 
     const classifierDataSets = await Promise.all(
-      classifierIds.map(async (modelId) => {
+      modelIds.map(async (modelId) => {
         const rows = await d3.csv(await getCsvFileForModel(modelId));
         rows.modelId = modelId;
         return rows;
       })
     );
-    attachClassifierPredictions(data, classifierDataSets, labels);
-    console.log("Classifier predictions loaded for consensus:", classifierIds);
+    attachClassifierPredictions(data, classifierDataSets, labels, predictionModelIds);
+    console.log("Classifier features loaded:", modelIds);
+    console.log("Classifier predictions loaded for consensus:", predictionModelIds);
 
     // If this embedding model has no UMAP coordinate columns in the file
     // (e.g. "albert" is absent), show a notice instead of a broken plot.
