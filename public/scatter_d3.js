@@ -387,6 +387,7 @@ export function createClassLegend(containerId, labels, data, mode) {
     container.selectAll("*").remove();
     const palette = d3.schemeDark2;
     const values = data.map((datum) => getCircleValue(datum, mode, labels));
+    const activeValueScale = createValueScale(data, mode, labels);
     const valueExtent = d3.extent(values);
     const formatValue = (value) => Number.isInteger(value)
         ? String(value)
@@ -407,7 +408,9 @@ export function createClassLegend(containerId, labels, data, mode) {
             .style("display", "inline-flex")
             .style("align-items", "center")
             .style("gap", "7px")
-            .style("font-size", "12px");
+            .style("font-size", "12px")
+            .style("cursor", "pointer")
+            .attr("data-label-index", index);
         const color = palette[index % palette.length];
         item.append("span")
             .style("width", "120px")
@@ -416,6 +419,45 @@ export function createClassLegend(containerId, labels, data, mode) {
             .style("background", `linear-gradient(to right, white, ${color})`)
             .style("border", "1px solid #666");
         item.append("span").text(label);
+
+        const previousOpacity = new Map();
+        item
+            .on("mouseenter", function() {
+                d3.selectAll(".dot").each(function() {
+                    previousOpacity.set(this, {
+                        fill: this.style.fill,
+                        fillOpacity: this.style.fillOpacity,
+                        stroke: this.style.stroke,
+                        strokeWidth: this.style.strokeWidth,
+                        strokeOpacity: this.style.strokeOpacity
+                    });
+
+                    const datum = d3.select(this).datum();
+                    const isMatchingClass = this.classList.contains(`dot-label-${index}`);
+                    this.style.fill = getSimilarityColor(
+                        datum.label,
+                        getCircleValue(datum, mode, labels),
+                        labels,
+                        activeValueScale
+                    );
+                    if (isMatchingClass) {
+                        this.style.stroke = getClassColor(datum.label, labels);
+                        this.style.strokeWidth = "2.5px";
+                    }
+                    this.style.fillOpacity = isMatchingClass ? "1" : "0.15";
+                    this.style.strokeOpacity = isMatchingClass ? "1" : "0.15";
+                });
+            })
+            .on("mouseleave", function() {
+                previousOpacity.forEach((opacity, dot) => {
+                    dot.style.fill = opacity.fill;
+                    dot.style.fillOpacity = opacity.fillOpacity;
+                    dot.style.stroke = opacity.stroke;
+                    dot.style.strokeWidth = opacity.strokeWidth;
+                    dot.style.strokeOpacity = opacity.strokeOpacity;
+                });
+                previousOpacity.clear();
+            });
     });
 
     const range = legend.append("div")
@@ -1057,12 +1099,30 @@ export function scatter(files_name,model){
   function getAnnotationLines(dat) {
     const labelIndex = getLabelIndex(dat.label, labels);
     const labelName = labelIndex >= 0 ? labels[labelIndex] : String(dat.label);
-    return [
+    const lines = [
       `${dat.ID ?? 'Unknown'}`,
       `Class: ${labelName}`,
-      `Length: ${dat.len ?? 'N/A'}`,
-      `Similarity: ${formatAnnotationValue(getCircleValue(dat, "similarity", labels))}`
+      `Length: ${dat.len ?? 'N/A'}`
     ];
+
+    if (currentColorMode === "consensus") {
+      const predictionLines = (dat.classifierFeatureRows || [])
+        .filter((row) => String(row.modelId || "")
+          .toLowerCase()
+          .endsWith(`_${modelKey}`))
+        .map((row) => {
+          const predictionIndex = getLabelIndex(row.label, labels);
+          const prediction = predictionIndex >= 0 ? labels[predictionIndex] : String(row.label);
+          return `${row.modelId ?? 'Classifier'}: ${prediction}`;
+        });
+
+      lines.push("Predictions:");
+      lines.push(...(predictionLines.length > 0 ? predictionLines : ["N/A"]));
+    } else {
+      lines.push(`Similarity: ${formatAnnotationValue(getCircleValue(dat, "similarity", labels))}`);
+    }
+
+    return lines;
   }
 
   function clearSelectedAnnotation() {
@@ -1330,6 +1390,9 @@ export function scatter(files_name,model){
         updateDotsColor(svg, data, labels, similarityScale);
 
         createClassLegend("legend-color", labels, data, "similarity");
+        if (selectedDatum) {
+            drawSelectedAnnotation(selectedDatum);
+        }
         }
     );
 
@@ -1339,6 +1402,9 @@ export function scatter(files_name,model){
             updateDotsColorConsensus(svg, data, labels, consensusScale);
 
         createClassLegend("legend-color", labels, data, "consensus");
+        if (selectedDatum) {
+            drawSelectedAnnotation(selectedDatum);
+        }
         }
     )
 
